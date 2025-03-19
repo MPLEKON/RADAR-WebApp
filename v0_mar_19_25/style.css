@@ -1,0 +1,207 @@
+/* 🌈 General Styles */
+body {
+    margin: 0;
+    padding: 0;
+    font-family: Arial, sans-serif;
+    background: linear-gradient(to bottom, #d3cce3, #e9e4f0);
+    background-attachment: fixed;
+  }
+  
+  /* 🎯 Center Everything */
+  .main-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;  /* Centers horizontally */
+    justify-content: center; /* Centers vertically */
+    width: 100%;
+  }
+  
+  h1 {
+    text-align: center;
+    margin: 20px;
+  }
+  
+/* 🔲 Contributors Box (Smaller & Below Heading) */
+/* 🔲 Move Contributors Box to the Right (Below Heading) */
+.contributors-box {
+    position: static;  /* Keep it below heading */
+    width: 100%;
+    max-width: 300px;  /* Ensure it doesn’t stretch too wide */
+    background-color: rgba(255, 255, 255, 0.9);
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);
+    padding: 10px 15px;
+    font-size: 14px;
+    line-height: 1.4;
+    margin: 10px auto ; /* Moves it to the right */
+    text-align: center; /* Align text to the left */
+  }
+  
+  
+  .contributors-box h3 {
+    margin: 5px 0;
+    font-size: 14px; /* Smaller font */
+  }
+  
+  .contributors-box ul {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+    text-align: center;
+  }
+  
+  .contributors-box li {
+    padding: 3px 0;
+    font-size: 13px; /* Reduce text size */
+  }
+  
+  .contributors-box li:hover {
+    text-shadow: 0px 0px 8px rgba(0, 150, 255, 0.8);
+    transition: text-shadow 0.3s ease-in-out;
+  }
+  /* 🎓 Fix LinkedIn & University Logos */
+.linkedin-logo {
+    width: 24px;  /* Reduce size */
+    height: auto;
+    margin-right: 5px;
+    vertical-align: middle;
+    cursor: pointer;
+    transition: transform 0.2s ease-in-out;
+  }
+  
+  .uni-logo {
+    width: 50px; /* Reduce size */
+    height: auto;
+    margin: 5px auto;
+    display: block;
+  }
+  
+  .linkedin-logo:hover {
+    transform: scale(1.1);
+  }
+  
+  
+  
+  /* 📜 Description Box */
+  .description-box {
+    max-width: 900px;
+    margin: 20px auto;
+    padding: 15px;
+    background-color: rgba(255, 255, 255, 0.9);
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    font-size: 16px;
+    line-height: 1.5;
+    font-weight: 500;
+  }
+  
+  /* 📊 Chart Grid */
+  .chart-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 500px);
+    grid-gap: 20px;
+    justify-content: center;
+    /*margin: 20px;*/
+    width: 100%;
+  }
+  
+  .chart-grid canvas {
+    width: 100%;
+    max-width: 500px;
+    border: 1px solid #ccc;
+    background: #fff;
+  }
+  
+  /* 📡 Real-Time Charts */
+  .real-time-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    margin-top: 20px;
+  }
+  
+  .real-time-charts {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+    justify-content: center;
+    align-items: center;
+    gap: 20px;
+    width: 100%;
+    max-width: 1000px;
+  }
+  
+  @media (max-width: 768px){
+    .real-time-charts{
+        grid-template-columns: 1fr;
+        justify-items: center;
+    }
+  }
+  .real-time-container canvas {
+    width: 500px;
+    height: 300px;
+    border: 1px solid #ccc;
+    background-color: white;
+  }
+  
+  /* ✨ Hover Effects */
+  canvas:hover {
+    box-shadow: 0px 0px 15px rgba(0, 255, 0, 0.5);
+    transition: box-shadow 0.3s ease-in-out;
+  }
+  
+  #toggleBtn:hover {
+    box-shadow: 0px 0px 10px rgba(255, 99, 132, 0.7);
+  }
+  
+  /* 🎯 Responsive Design - Center & Stack Content on Small Screens */
+  @media (max-width: 768px) {
+    /* 📌 Stack Contributors Below the Heading */
+    .contributors-box {
+      position: static;
+      width: 90%;
+      max-width: 400px;
+      margin: 10px auto;
+    }
+  
+    /* 📌 Make Everything Stack */
+    .chart-grid {
+      display: flex;
+      flex-direction: column;  /* Stack in one column */
+      align-items: center;
+      width: 100%;
+      gap: 20px;
+    }
+  
+    .real-time-charts {
+      flex-direction: column;  /* Stack real-time charts */
+      align-items: center;
+    }
+  
+    .real-time-container canvas {
+      width: 90%;
+      max-width: 500px;
+    }
+  
+    #toggleBtn {
+      width: 100%;
+      font-size: 14px;
+      padding: 10px;
+    }
+  }
+  
+  /* 📜 Footer */
+  footer {
+    text-align: center;
+    padding: 10px;
+    background: rgba(255, 255, 255, 0.9);
+    position: relative;
+    bottom: 0;
+    width: 100%;
+  }
+  

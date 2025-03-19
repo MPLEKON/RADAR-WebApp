@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Radar Data Web Visualization</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+  <link rel="stylesheet" href="style.css">
+
+</head>
+
+<body>
+  <div class="main-container">
+
+  
+  
+  <h1>Web Visualization of FMCW Radar Data for Berthing Assistance</h1>
+  <div class="contributors-box">
+    <h3>Aalesund, 19 March 2025, v0</h3>
+    <h3>Contributors</h3>
+    <ul>
+      <li>
+        <a href="https://www.linkedin.com/in/fotios-papadopoulos-22722b299/" target="_blank">
+          <img src="linkedin_logo.png" alt="LinkedIn" class="linkedin-logo">
+        </a>Fotios Papadopoulos
+      </li>
+      <li>
+        <a href="https://www.linkedin.com/in/ioannis-christopoulos-3abab6227/" target="_blank">
+          <img src="linkedin_logo.png" alt="LinkedIn" class="linkedin-logo">
+        </a>Ioannis Christopoulos
+      </li>
+    </ul>
+  
+    <h3>Supervisors</h3>
+    <ul>
+      <li>
+        <a href="https://www.ntnu.edu/employees/henrique.gaspar" target="_blank">
+          <img src="ntnu_logo.png" alt="NTNU Logo" class="uni-logo">
+        </a> Henrique M. Gaspar
+      </li>
+      <li>
+        <a href="https://eee.uniwa.gr/el/index.php?option=com_content&view=article&id=112" target="_blank">
+          <img src="uniwa_logo.png" alt="UNIWA Logo" class="uni-logo">
+        </a> Stelios Mitilineos
+      </li>
+    </ul>
+  </div>
+  <div class="description-box">
+    <p>
+      This project is a collaboration between the University of West Attica (UniWA) and the Norwegian University of Science and Technology (NTNU), focusing on the visual representation of real-world radar data collected from FMCW (Frequency-Modulated Continuous Wave) radars mounted on Ro-Ro Passenger ship. The primary objective is to track the backscattered dock signal and accurately determine its distance, improving situational awareness and docking precision in maritime environments particularly during berthing. The radar captures all the detected objects that are inside range (50m) at 20Hz. Each detected object consists of 3 dimension coordinates, radial velocity in m/s, and SNR in dB.
+      The first 4 charts show the detected objects for a duration of 1 minute, plotted all at once, static. The last two charts mimic a real-time plot of the detections.
+      
+    </p>
+  </div>
+  
+
+  <div class="chart-grid">
+    <canvas id="chart1"></canvas>
+    <canvas id="chart2"></canvas>
+    <canvas id="chart3"></canvas>
+    <canvas id="chart4"></canvas>
+    <canvas id="chart5"></canvas>
+    <canvas id="chart6"></canvas>
+  </div>
+  <div class="real-time-container">
+    <div class="real-time-charts">
+      <canvas id="chart7"></canvas>  
+      <canvas id="chart8"></canvas>  
+    </div>
+    <button id="toggleBtn">Stop Real-Time</button>
+  </div>
+
+  <script>
+    const csvUrl = 'detected_objects_filtered.csv';
+    let framesData = [];
+    let realTimeInterval = null;
+    let realTimeRunning = true;
+    let currentFrameIndex = 0;
+
+    const commonOptions = {
+      responsive: false,
+      scales: {
+        x: { type: 'linear', title: { display: true } },
+        y: { title: { display: true } }
+      },
+      animation: { duration: 0 },
+      hover: { animationDuration: 0 },
+      responsiveAnimationDuration: 0,
+      plugins: { tooltip: { enabled: false } }
+    };
+
+    function renderScatterChart(canvasId, label, dataArray, xTitle, yTitle, borderColor, backgroundColor) {
+      let ctx = document.getElementById(canvasId).getContext('2d');
+      
+      new Chart(ctx, {
+        type: 'scatter',
+        data: {
+          datasets: [{
+            label: label,
+            data: dataArray,
+            borderColor: borderColor,
+            backgroundColor: backgroundColor,
+            showLine: false
+          }]
+        },
+        options: {
+          ...commonOptions,
+          scales: {
+            x: { type: 'linear', title: { display: true, text: xTitle } },
+            y: { title: { display: true, text: yTitle } }
+          },
+          plugins: {
+            tooltip: { enabled: false }
+          },
+          layout: {
+            padding: 10
+          }
+        },
+        plugins: [{
+          beforeDraw: function(chart) {
+            let ctx = chart.ctx;
+            ctx.save();
+            ctx.fillStyle = "white"; // ✅ Set white background inside canvas
+            ctx.fillRect(0, 0, chart.width, chart.height);
+            ctx.restore();
+          }
+        }]
+      });
+    }
+
+
+    function processFramesData(rows, startIndex, endIndex) {
+      let sample = rows.slice(startIndex, endIndex);
+      let frames = [];
+      for (let i = 0; i < sample.length; i++) {
+        let row = sample[i];
+        let frame = i + 1; 
+        let timestamp = parseFloat(row["POSIX Timestamp"]) || null;
+        let detectedStr = row["Detected Objects"] || "";
+        detectedStr = "[" + detectedStr + "]";
+        let objectsArray;
+        try {
+          objectsArray = JSON.parse(detectedStr);
+        } catch (error) {
+          console.error("Error parsing detected objects for frame", frame, error);
+          objectsArray = [];
+        }
+        let objects = [];
+        objectsArray.forEach(objArr => {
+          if (objArr.length >= 5) {
+            objects.push({
+              x: objArr[0],
+              y: objArr[1],
+              z: objArr[2],
+              radVel: objArr[3],
+              snr: objArr[4]
+            });
+          }
+        });
+        frames.push({ frame, timestamp, objects });
+      }
+      return frames;
+    }
+
+    function buildChartArrays(frames) {
+      const dataX = [];
+      const dataY = [];
+      const dataZ = [];
+      const dataRadial = [];
+      const dataSNR = [];
+      const dataYZ = [];
+      frames.forEach(frameObj => {
+        frameObj.objects.forEach(obj => {
+          dataX.push({ x: frameObj.frame, y: obj.x });
+          dataY.push({ x: frameObj.frame, y: obj.y });
+          dataZ.push({ x: frameObj.frame, y: obj.z });
+          dataRadial.push({ x: frameObj.frame, y: obj.radVel });
+          dataSNR.push({ x: frameObj.frame, y: obj.snr });
+          dataYZ.push({ x: obj.z, y: obj.y });
+        });
+      });
+      return { dataX, dataY, dataZ, dataRadial, dataSNR, dataYZ };
+    }
+
+    function renderStaticCharts(chartArrays) {
+      renderScatterChart('chart1', 'X vs Frame', chartArrays.dataX, 'Frame Number', 'X (m)', 'rgb(75, 192, 192)', 'rgba(75, 192, 192, 0.5)');
+      renderScatterChart('chart2', 'Y vs Frame', chartArrays.dataY, 'Frame Number', 'Y (m)', 'rgb(255, 99, 132)', 'rgba(255, 99, 132, 0.5)');
+      renderScatterChart('chart3', 'Z vs Frame', chartArrays.dataZ, 'Frame Number', 'Z (m)', 'rgb(255, 165, 0)', 'rgba(255, 165, 0, 0.5)');
+      renderScatterChart('chart4', 'Y vs Z', chartArrays.dataYZ, 'Z (m)', 'Y (m)', 'rgb(153, 102, 255)', 'rgba(153, 102, 255, 0.5)');
+      renderScatterChart('chart5', 'Radial Velocity (m/s) vs Frame', chartArrays.dataRadial, 'Frame Number', 'Radial Velocity (m/s)', 'rgb(54, 162, 235)', 'rgba(54, 162, 235, 0.5)');
+      renderScatterChart('chart6', 'SNR (dB) vs Frame', chartArrays.dataSNR, 'Frame Number', 'SNR (dB)', 'rgb(255, 206, 86)', 'rgba(255, 206, 86, 0.5)');
+    }
+
+    function renderRealTimeChart(canvasId, label, xLabel, yLabel, borderColor) {
+      return new Chart(document.getElementById(canvasId).getContext('2d'), {
+        type: 'scatter',
+        data: {
+          datasets: [{
+            label: label,
+            data: [],
+            borderColor: borderColor,
+            showLine: false
+          }]
+        },
+        options: {
+          responsive: false,
+          scales: {
+            x: { type: 'linear', title: { display: true, text: xLabel } },
+            y: { title: { display: true, text: yLabel } }
+          },
+          animation: { duration: 0 },
+          hover: { animationDuration: 0 },
+          responsiveAnimationDuration: 0,
+          plugins: { tooltip: { enabled: false } }
+        },
+        plugins: [{
+          beforeDraw: function(chart) {
+            let ctx = chart.ctx;
+            ctx.save();
+            ctx.fillStyle = "white"; // ✅ Ensure the background is white
+            ctx.fillRect(0, 0, chart.width, chart.height);
+            ctx.restore();
+          }
+        }]
+      });
+    }
+
+
+    function startRealTimeUpdates(frames, chartYZ, chartXY) {
+      if (window.realTimeInterval) return; 
+
+      let globalZMin = Math.min(...frames.flatMap(f => f.objects.map(o => o.z)));
+      let globalZMax = Math.max(...frames.flatMap(f => f.objects.map(o => o.z)));
+      let globalYMin_YZ = Math.min(...frames.flatMap(f => f.objects.map(o => o.y)));
+      let globalYMax_YZ = Math.max(...frames.flatMap(f => f.objects.map(o => o.y)));
+
+      let globalXMin_XY = Math.min(...frames.flatMap(f => f.objects.map(o => o.y))); 
+      let globalXMax_XY = Math.max(...frames.flatMap(f => f.objects.map(o => o.y)));
+      let globalYMin_XY = Math.min(...frames.flatMap(f => f.objects.map(o => o.x)));
+      let globalYMax_XY = Math.max(...frames.flatMap(f => f.objects.map(o => o.x)));
+
+
+      window.realTimeInterval = setInterval(() => {
+        currentFrameIndex = (currentFrameIndex + 1) % frames.length;
+        let currentFrame = frames[currentFrameIndex];
+
+        let dataYZ = currentFrame.objects.map(obj => ({ x: obj.z, y: obj.y }));
+        let dataXY = currentFrame.objects.map(obj => ({ x: obj.y, y: obj.x }));
+
+        chartYZ.data.datasets[0].data = dataYZ;
+        chartYZ.data.datasets[0].label = 'Real-Time Y vs Z (Frame ' + currentFrame.frame + ')';
+        chartYZ.options.scales.x.min = Math.floor(globalZMin);
+        chartYZ.options.scales.x.max = Math.ceil(globalZMax);
+        chartYZ.options.scales.y.min = Math.floor(globalYMin_YZ);
+        chartYZ.options.scales.y.max = Math.ceil(globalYMax_YZ);
+        chartYZ.update();
+
+        chartXY.data.datasets[0].data = dataXY;
+        chartXY.data.datasets[0].label = 'Real-Time X vs Y (Frame ' + currentFrame.frame + ')';
+        chartXY.options.scales.x.min = Math.floor(globalXMin_XY);
+        chartXY.options.scales.x.max =  Math.ceil(globalXMax_XY);
+        chartXY.options.scales.y.min = Math.floor(globalYMin_XY);
+        chartXY.options.scales.y.max =  Math.ceil(globalYMax_XY);
+        chartXY.update();
+      }, 50);
+    }
+
+
+    function stopRealTimeUpdates() {
+      clearInterval(window.realTimeInterval);
+      window.realTimeInterval = null;
+    }
+
+    function init() {
+      Papa.parse(csvUrl, {
+        download: true,
+        header: true,
+        complete: function(results) {
+          const rows = results.data;
+          framesData = processFramesData(rows, 1953, 3153);
+          console.log("Frames Data:", framesData);
+
+          const chartArrays = buildChartArrays(framesData);
+          renderStaticCharts(chartArrays);
+
+          const chartYZ = renderRealTimeChart('chart7', 'Real-Time Y vs Z', 'Z (m)', 'Y (m)', 'rgb(0, 200, 0)', 'rgba(0, 200, 0, 0.5)');
+          const chartXY = renderRealTimeChart('chart8', 'Real-Time X vs Y', 'Y (m)', 'X (m)', 'rgb(0, 0, 255)', 'rgba(0, 0, 255, 0.5)');
+
+          startRealTimeUpdates(framesData, chartYZ, chartXY);
+
+          document.getElementById("toggleBtn").addEventListener("click", () => {
+            if (realTimeRunning) {
+              stopRealTimeUpdates();
+              document.getElementById("toggleBtn").textContent = "Start Real-Time";
+            } else {
+              startRealTimeUpdates(framesData, chartYZ, chartXY);
+              document.getElementById("toggleBtn").textContent = "Stop Real-Time";
+            }
+            realTimeRunning = !realTimeRunning;
+          });
+        }
+      });
+}
+    init();
+  </script>
+  </div>
+</body>
+<footer>
+  <p>Developed by NTNU & UNIWA</p>
+</footer>
+
+</html>
