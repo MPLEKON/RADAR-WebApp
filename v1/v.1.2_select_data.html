@@ -20,6 +20,10 @@
                 <label class="form-check-label" for="darkModeSwitch">Dark Mode</label>
             </div>
             <h1>This is a bootstrap container</h1>
+            <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" id="realTimeSwitch">
+                <label class="form-check-label" for="realTimeSwitch">Real-Time Mode</label>
+            </div>
             <div class="btn-group">
                 <button type="button" class="btn btn-success">Start</button>
                 <button type="button" class="btn btn-danger">Stop</button>
@@ -36,7 +40,7 @@
                 </div>
             </div> 
             <div class="d-flex justify-content-center">
-                <div class="w-75 h-50"> 
+                <div class="w-75 h-80"> 
                     <canvas id="myChart"></canvas>
                 </div>
             </div>
@@ -88,95 +92,223 @@
             });
         </script>
         <script>
-            document.addEventListener("DOMContentLoaded", () => {
-                const dropdownItems = document.querySelectorAll(".dropdown-item");
+const maxFrames = parsedData.length;  // Total frames in dataset
+let currentFrame = 0;                 // Tracks the current real-time frame
+let updateInterval = null;             // Stores the interval reference
 
-                dropdownItems.forEach(item => {
-                    item.addEventListener("click", (event) => {
-                        event.preventDefault();
-                        const selectedChart = event.target.getAttribute("data-chart");
-                        console.log("Selected Chart:", selectedChart);
+function startRealTimeUpdates(chartType) {
+    if (updateInterval) clearInterval(updateInterval); // Stop any existing updates
 
-                        // Call a function to update the chart based on selection
-                        updateChart(selectedChart);
-                    });
-                });
-            });
+    currentFrame = 0; // Reset frame count
+    myChart.data.datasets[0].data = []; // Clear previous data
 
-            function updateChart(chartType) {
-                console.log("Updating chart to:", chartType);
+    updateInterval = setInterval(() => {
+        if (currentFrame >= maxFrames) {
+            currentFrame = 0; // Loop back to frame 0 instead of stopping
+            myChart.data.datasets[0].data = []; // Clear chart for new cycle
+        }
 
-                let newData;
-                switch (chartType) {
-                    case "x_vs_frames":
-                        newData = {
-                            datasets: [{
-                                label: "X vs Frames",
-                                data: parsedData.flatMap(frame =>
-                                    frame.points.map(point => ({ x: frame.frameNum, y: point.x }))
-                                )
-                            }]
-                        };
-                        break;
-                    case "y_vs_frames":
-                        newData = {
-                            datasets: [{
-                                label: "Y vs Frames",
-                                data: parsedData.flatMap(frame =>
-                                    frame.points.map(point => ({ x: frame.frameNum, y: point.y }))
-                                )
-                            }]
-                        };
-                        break;
-                    case "z_vs_frames":
-                        newData = {
-                            datasets: [{
-                                label: "Z vs Frames",
-                                data: parsedData.flatMap(frame =>
-                                    frame.points.map(point => ({ x: frame.frameNum, y: point.z }))
-                                )
-                            }]
-                        };
-                        break;
-                    case "x_vs_y":
-                        newData = {
-                            datasets: [{
-                                label: "X vs Y",
-                                data: parsedData.flatMap(frame =>
-                                    frame.points.map(point => ({ x: point.x, y: point.y }))
-                                )
-                            }]
-                        };
-                        break;
-                    case "x_vs_z":
-                        newData = {
-                            datasets: [{
-                                label: "X vs Z",
-                                data: parsedData.flatMap(frame =>
-                                    frame.points.map(point => ({ x: point.x, y: point.z }))
-                                )
-                            }]
-                        };
-                        break;
-                    case "y_vs_z":
-                        newData = {
-                            datasets: [{
-                                label: "Y vs Z",
-                                data: parsedData.flatMap(frame =>
-                                    frame.points.map(point => ({ x: point.y, y: point.z }))
-                                )
-                            }]
-                        };
-                        break;
-                    default:
-                        console.error("Unknown chart type:", chartType);
-                        return;
-                }
-                
-                myChart.data = newData;
-                myChart.update();
-            }
+        updateChart(chartType, true, currentFrame);
+        currentFrame++;
+    }, 50); // Update every 50ms
+}
 
-        </script>
+
+function stopRealTimeUpdates() {
+    clearInterval(updateInterval);
+    updateInterval = null;
+}
+// Reference buttons
+const startButton = document.querySelector(".btn-success");
+const stopButton = document.querySelector(".btn-danger");
+
+// Start real-time updates when clicking Start
+startButton.addEventListener("click", () => {
+    const selectedChart = document.querySelector(".dropdown-item.active")?.getAttribute("data-chart") || "y_vs_frames";
+    document.getElementById("realTimeSwitch").checked = true; // Enable real-time mode
+    startRealTimeUpdates(selectedChart);
+});
+
+// Stop real-time updates when clicking Stop
+stopButton.addEventListener("click", () => {
+    stopRealTimeUpdates();
+    document.getElementById("realTimeSwitch").checked = false; // Disable real-time mode
+});
+// Compute global min/max values for each dataset at the start
+const globalExtremes = {
+    x: {
+        min: Math.floor(Math.min(...parsedData.flatMap(frame => frame.points.map(p => p.x)))),
+        max: Math.ceil(Math.max(...parsedData.flatMap(frame => frame.points.map(p => p.x))))
+    },
+    y: {
+        min: Math.floor(Math.min(...parsedData.flatMap(frame => frame.points.map(p => p.y)))),
+        max: Math.ceil(Math.max(...parsedData.flatMap(frame => frame.points.map(p => p.y))))
+    },
+    z: {
+        min: Math.floor(Math.min(...parsedData.flatMap(frame => frame.points.map(p => p.z)))),
+        max: Math.ceil(Math.max(...parsedData.flatMap(frame => frame.points.map(p => p.z))))
+    }
+};
+
+function updateChart(chartType, realTime = false, frameIndex = null) {
+    console.log("Updating chart:", chartType, "| Real-Time:", realTime, "| Frame:", frameIndex);
+
+    let newData = [];
+    let xLabel = "";
+    let yLabel = "";
+    let xMin, xMax, yMin, yMax;
+
+    switch (chartType) {
+        case "x_vs_frames":
+            xLabel = "Frames";
+            yLabel = "X (m)";
+            xMin = 0;
+            xMax = maxFrames; // Fixed for frame-based plots
+            yMin = globalExtremes.x.min;  // Fixed global min
+            yMax = globalExtremes.x.max;  // Fixed global max
+            break;
+
+        case "y_vs_frames":
+            xLabel = "Frames";
+            yLabel = "Y (m)";
+            xMin = 0;
+            xMax = maxFrames; // Fixed for frame-based plots
+            yMin = globalExtremes.y.min;  // Fixed global min
+            yMax = globalExtremes.y.max;  // Fixed global max
+            break;
+
+        case "z_vs_frames":
+            xLabel = "Frames";
+            yLabel = "Z (m)";
+            xMin = 0;
+            xMax = maxFrames; // Fixed for frame-based plots
+            yMin = globalExtremes.z.min;  // Fixed global min
+            yMax = globalExtremes.z.max;  // Fixed global max
+            break;
+
+        case "x_vs_y":
+            xLabel = "Y (m)";
+            yLabel = "X (m)";
+            xMin = globalExtremes.x.min; // Fixed global min
+            xMax = globalExtremes.x.max; // Fixed global max
+            yMin = globalExtremes.y.min; // Fixed global min
+            yMax = globalExtremes.y.max; // Fixed global max
+            break;
+
+        case "x_vs_z":
+            xLabel = "X (m)";
+            yLabel = "Z (m)";
+            xMin = globalExtremes.x.min; // Fixed global min
+            xMax = globalExtremes.x.max; // Fixed global max
+            yMin = globalExtremes.z.min; // Fixed global min
+            yMax = globalExtremes.z.max; // Fixed global max
+            break;
+
+        case "y_vs_z":
+            xLabel = "Y (m)";
+            yLabel = "Z (m)";
+            xMin = globalExtremes.y.min; // Fixed global min
+            xMax = globalExtremes.y.max; // Fixed global max
+            yMin = globalExtremes.z.min; // Fixed global min
+            yMax = globalExtremes.z.max; // Fixed global max
+            break;
+
+        default:
+            console.error("Unknown chart type:", chartType);
+            return;
+    }
+
+    if (realTime && frameIndex !== null) {
+        let frame = parsedData[frameIndex];
+        if (!frame) return; // Safety check
+
+        switch (chartType) {
+            case "x_vs_frames":
+                newData = frame.points.map(point => ({ x: frameIndex, y: point.x }));
+                break;
+            case "y_vs_frames":
+                newData = frame.points.map(point => ({ x: frameIndex, y: point.y }));
+                break;
+            case "z_vs_frames":
+                newData = frame.points.map(point => ({ x: frameIndex, y: point.z }));
+                break;
+            case "x_vs_y":
+                newData = frame.points.map(point => ({ x: point.y, y: point.x }));
+                break;
+            case "x_vs_z":
+                newData = frame.points.map(point => ({ x: point.x, y: point.z }));
+                break;
+            case "y_vs_z":
+                newData = frame.points.map(point => ({ x: point.y, y: point.z }));
+                break;
+        }
+
+        myChart.data.datasets[0].data.push(...newData);
+    } else {
+        newData = parsedData.flatMap(frame =>
+            frame.points.map(point => ({
+                x: frame.frameNum,
+                y: point[chartType.split("_vs_")[0]]  // Extract X or Y variable
+            }))
+        );
+
+        myChart.data.datasets[0].data = newData;
+    }
+
+    // Set fixed axis limits for both X and Y axis
+    myChart.options.scales.x = {
+        title: { display: true, text: xLabel },
+        min: xMin,
+        max: xMax
+    };
+
+    myChart.options.scales.y = {
+        title: { display: true, text: yLabel },
+        min: yMin,
+        max: yMax
+    };
+
+    myChart.data.datasets[0].label = chartType.replace(/_/g, " ").toUpperCase();
+    myChart.update();
+}
+
+
+
+
+
+
+// Handle dropdown selection
+document.querySelectorAll(".dropdown-item").forEach(item => {
+    item.addEventListener("click", (event) => {
+        event.preventDefault();
+        document.querySelectorAll(".dropdown-item").forEach(i => i.classList.remove("active"));
+        event.target.classList.add("active");
+
+        const selectedChart = event.target.getAttribute("data-chart");
+        console.log("Selected Chart:", selectedChart);
+
+        if (document.getElementById("realTimeSwitch").checked) {
+            startRealTimeUpdates(selectedChart);
+        } else {
+            updateChart(selectedChart);
+        }
+    });
+});
+
+// Toggle real-time mode
+document.getElementById("realTimeSwitch").addEventListener("change", function () {
+    if (this.checked) {
+        console.log("Real-time mode enabled");
+        const activeChart = document.querySelector(".dropdown-item.active")?.getAttribute("data-chart") || "y_vs_frames";
+        startRealTimeUpdates(activeChart);
+    } else {
+        console.log("Real-time mode disabled");
+        stopRealTimeUpdates();
+        const activeChart = document.querySelector(".dropdown-item.active")?.getAttribute("data-chart") || "y_vs_frames";
+        updateChart(activeChart); // Show static data
+    }
+});
+
+</script>
     </body>
 </html>
