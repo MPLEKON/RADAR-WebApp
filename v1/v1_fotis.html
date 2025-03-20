@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8">
-    <title>Chart with SNR Toggle, Static & Real-Time Modes</title>
+    <title>Fixed-Axis Chart with SNR & Radial Velocity Visualization</title>
     <!-- Bootstrap CSS -->
     <link 
       href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" 
@@ -15,7 +15,7 @@
   </head>
   <body>
     <div class="container my-4">
-      <h1 class="text-center mb-4">Chart with SNR Visualization</h1>
+      <h1 class="text-center mb-4">Chart with SNR & Radial Velocity Visualization</h1>
       
       <!-- Dropdown for Plot Type (X–Y or Y–Z) -->
       <div class="mb-3 text-center">
@@ -44,7 +44,7 @@
       <div class="mb-3 text-center">
         <button id="startBtn" class="btn btn-primary me-2">Start</button>
         <button id="stopBtn" class="btn btn-secondary me-2">Stop</button>
-        <button id="resetBtn" class="btn btn-danger">Reset</button>
+        <button id="resetBtn" class="btn btn-danger me-2">Reset</button>
         <button id="loadCsvBtn" class="btn btn-info">Load New CSV</button>
       </div>
       
@@ -55,7 +55,7 @@
       </div>
     </div>
 
-    <!-- External CSV data file (csvFotis.js) and our data parser module -->
+    <!-- Import external CSV data (csvFotis.js) -->
     <script type="module" src="csvFotis.js"></script>
     <script type="module">
       import { csvData } from "./csvFotis.js";
@@ -82,9 +82,8 @@
       };
 
       // For Y-Z mode:
-      // Horizontal axis forced from 0 to overall maximum Y.
       const yzBounds = {
-        xMin: 0,
+        xMin: 0, // Forced horizontal axis from 0 to max Y
         xMax: Math.max(...allYValues),
         yMin: Math.min(...allZValues),
         yMax: Math.max(...allZValues)
@@ -98,10 +97,11 @@
       let currentIndex = 0;
       const updateInterval = 50; // 50ms
 
-      // Global toggle flag for SNR visualization
+      // Global flag for SNR visualization
       let useSNRVisualization = false;
 
-      // Mapping function: returns an object with x, y and SNR.
+      // getMappingFunction returns a mapping function based on the plot type.
+      // It now returns an object that includes the SNR value.
       function getMappingFunction() {
         const selection = document.getElementById("plotSelect").value;
         if (selection === "xy") {
@@ -111,15 +111,25 @@
         }
       }
 
-      // Chart.js allows scriptable options. We define pointRadius as a function.
+      // Helper function: map a single frame's points using the current mapping function.
+      function mapFramePoints(frame) {
+        const mapping = getMappingFunction();
+        return frame.points.map(mapping);
+      }
+
+      // Helper function: map all frames' points (for static mode)
+      function mapAllPoints(data) {
+        const mapping = getMappingFunction();
+        return data.flatMap(frame => frame.points.map(mapping));
+      }
+
+      // Scriptable function to determine point radius based on SNR.
       function getPointRadius(context) {
-        // context.raw is our data point object (with snr property)
         if (useSNRVisualization) {
-          // Example mapping: radius is proportional to SNR (dB) divided by 2, with a minimum radius.
           const snr = context.raw.snr;
           return Math.max(2, snr / 2);
         } else {
-          return 5; // default radius
+          return 5;
         }
       }
 
@@ -144,7 +154,7 @@
         chart.update('none');
       }
 
-      // Initialize the Chart.js chart.
+      // Initialize Chart.js instance.
       function initChart() {
         const ctx = document.getElementById("myChart").getContext("2d");
         chart = new Chart(ctx, {
@@ -155,7 +165,6 @@
               data: [],
               backgroundColor: "rgba(75, 192, 192, 0.6)",
               borderColor: "rgba(75, 192, 192, 1)",
-              // Set pointRadius as a scriptable option:
               pointRadius: getPointRadius
             }]
           },
@@ -184,10 +193,8 @@
       // Start updates: in "static" mode, plot all points; in "realtime", one frame at a time.
       function start() {
         const mode = document.getElementById("modeSelect").value;
-        const mapping = getMappingFunction();
         if (mode === "static") {
-          const allPoints = cleanedData.flatMap(frame => frame.points.map(mapping));
-          chart.data.datasets[0].data = allPoints;
+          chart.data.datasets[0].data = mapAllPoints(cleanedData);
           chart.update();
           currentIndex = cleanedData.length;
           return;
@@ -199,8 +206,7 @@
             return;
           }
           const frame = cleanedData[currentIndex];
-          const newPoints = frame.points.map(mapping);
-          chart.data.datasets[0].data = newPoints;
+          chart.data.datasets[0].data = mapFramePoints(frame);
           chart.update();
           currentIndex++;
         }, updateInterval);
@@ -218,12 +224,11 @@
         chart.update();
       }
 
-      // Toggle SNR Visualization on button click.
+      // Toggle SNR Visualization.
       document.getElementById("toggleSNRBtn").addEventListener("click", () => {
         useSNRVisualization = !useSNRVisualization;
-        // Optionally change button text:
-        document.getElementById("toggleSNRBtn").textContent = useSNRVisualization ? "Disable SNR Visualization" : "Enable SNR Visualization";
-        // Update the chart to apply new pointRadius.
+        document.getElementById("toggleSNRBtn").textContent = useSNRVisualization ?
+          "Disable SNR Visualization" : "Enable SNR Visualization";
         chart.update();
       });
 
@@ -236,6 +241,39 @@
       // Reset when mode changes.
       document.getElementById("modeSelect").addEventListener("change", () => {
         resetChart();
+      });
+
+      // Load new CSV when button clicked.
+      document.getElementById("loadCsvBtn").addEventListener("click", () => {
+        const fileInput = document.createElement("input");
+        fileInput.type = "file";
+        fileInput.accept = ".csv, text/csv";
+        fileInput.addEventListener("change", (event) => {
+          const file = event.target.files[0];
+          if (file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+              const newCsvData = e.target.result;
+              cleanedData = parseAndCleanCSV(newCsvData);
+              console.log("New Cleaned Data:", cleanedData);
+              // Recompute bounds with new data:
+              const allXValuesNew = cleanedData.flatMap(frame => frame.points.map(pt => pt.x));
+              const allYValuesNew = cleanedData.flatMap(frame => frame.points.map(pt => pt.y));
+              const allZValuesNew = cleanedData.flatMap(frame => frame.points.map(pt => pt.z));
+              xyBounds.xMin = Math.min(...allXValuesNew);
+              xyBounds.xMax = Math.max(...allXValuesNew);
+              xyBounds.yMax = Math.max(...allYValuesNew);
+              yzBounds.xMax = Math.max(...allYValuesNew);
+              yzBounds.yMin = Math.min(...allZValuesNew);
+              yzBounds.yMax = Math.max(...allZValuesNew);
+              console.log("Updated Bounds:", { xyBounds, yzBounds });
+              resetChart();
+              updateChartScales();
+            };
+            reader.readAsText(file);
+          }
+        });
+        fileInput.click();
       });
 
       window.addEventListener("DOMContentLoaded", () => {
