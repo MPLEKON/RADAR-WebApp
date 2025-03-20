@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8">
-    <title>Real-Time X-Y / Y-Z Chart with Fixed Axes</title>
+    <title>Fixed-Axis Chart: Static & Real-Time with Units</title>
     <!-- Bootstrap CSS -->
     <link 
       href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" 
@@ -15,59 +15,71 @@
   </head>
   <body>
     <div class="container my-4">
-      <h1 class="text-center mb-4">Real-Time Chart</h1>
-      <!-- Dropdown to select plot type -->
+      <h1 class="text-center mb-4">Fixed-Axis Chart with Units</h1>
+      
+      <!-- Dropdown for Plot Type (X–Y or Y–Z) -->
       <div class="mb-3 text-center">
         <label for="plotSelect" class="form-label me-2">Plot Type:</label>
         <select id="plotSelect" class="form-select d-inline-block w-auto">
-          <option value="xy" selected>X-Y</option>
-          <option value="yz">Y-Z</option>
+          <option value="xy" selected>X–Y</option>
+          <option value="yz">Y–Z</option>
         </select>
       </div>
+      
+      <!-- Dropdown for Mode (Real-Time or Static) -->
+      <div class="mb-3 text-center">
+        <label for="modeSelect" class="form-label me-2">Mode:</label>
+        <select id="modeSelect" class="form-select d-inline-block w-auto">
+          <option value="realtime" selected>Real-Time</option>
+          <option value="static">Static</option>
+        </select>
+      </div>
+      
       <!-- Control Buttons -->
       <div class="mb-3 text-center">
         <button id="startBtn" class="btn btn-primary me-2">Start</button>
         <button id="stopBtn" class="btn btn-secondary me-2">Stop</button>
         <button id="resetBtn" class="btn btn-danger">Reset</button>
       </div>
+      
       <div class="card">
-        <!-- Set a flexible height for responsiveness -->
         <div class="card-body" style="height: 70vh;">
           <canvas id="myChart"></canvas>
         </div>
       </div>
     </div>
 
-    <!-- Import external CSV data and parsing library via modules -->
+    <!-- Import external CSV data and parsing module via ES6 modules -->
     <script type="module" src="csvFotis.js"></script>
     <script type="module">
       import { csvData } from "./csvFotis.js";
       import { parseAndCleanCSV } from "./dataParser.js";
 
-      // Parse and clean the CSV data.
+      // Parse CSV data
       const cleanedData = parseAndCleanCSV(csvData);
       console.log("Cleaned Data:", cleanedData);
-      
       if (cleanedData.length === 0) {
-        console.warn("No valid frames found.");
+        console.warn("No valid frames found. Chart won't be updated.");
       }
-      
-      // Compute bounds for both mappings:
+
+      // Compute overall bounds for the dataset:
       const allXValues = cleanedData.flatMap(frame => frame.points.map(pt => pt.x));
       const allYValues = cleanedData.flatMap(frame => frame.points.map(pt => pt.y));
       const allZValues = cleanedData.flatMap(frame => frame.points.map(pt => pt.z));
-      
-      // For X-Y plot:
+
+      // For X-Y mode:
       const xyBounds = {
         xMin: Math.min(...allXValues),
         xMax: Math.max(...allXValues),
-        yMin: Math.min(...allYValues),
+        yMin: 0, // Force Y axis to start at 0
         yMax: Math.max(...allYValues)
       };
-      
-      // For Y-Z plot:
+
+      // For Y-Z mode:
+      // Horizontal axis: force from 0 to overall maximum Y value
+      // Vertical axis: use the real range of Z values.
       const yzBounds = {
-        xMin: Math.min(...allYValues),
+        xMin: 0,
         xMax: Math.max(...allYValues),
         yMin: Math.min(...allZValues),
         yMax: Math.max(...allZValues)
@@ -75,40 +87,46 @@
 
       console.log("XY Bounds:", xyBounds);
       console.log("YZ Bounds:", yzBounds);
-      
-      let chart;           // Chart.js instance
-      let intervalId;      // Timer for setInterval
-      let currentIndex = 0; // Which frame to display next
-      const updateInterval = 50; // 50ms update
-      
-      // Returns the mapping function based on current dropdown selection.
+
+      let chart;
+      let intervalId;
+      let currentIndex = 0;
+      const updateInterval = 50; // 50ms
+
+      // Returns mapping function based on plot selection.
       function getMappingFunction() {
         const selection = document.getElementById("plotSelect").value;
         if (selection === "xy") {
           return pt => ({ x: pt.x, y: pt.y });
-        } else if (selection === "yz") {
+        } else {
           return pt => ({ x: pt.y, y: pt.z });
         }
       }
-      
-      // Updates the chart scales based on the current selection.
+
+      // Update chart scales based on current plot type.
+      // In X-Y mode: x-axis from xyBounds.xMin to xyBounds.xMax, y-axis fixed to 0..xyBounds.yMax.
+      // In Y-Z mode: x-axis forced to 0..(max Y), y-axis uses the full Z range.
       function updateChartScales() {
         const selection = document.getElementById("plotSelect").value;
         if (selection === "xy") {
           chart.options.scales.x.min = xyBounds.xMin;
           chart.options.scales.x.max = xyBounds.xMax;
-          chart.options.scales.y.min = xyBounds.yMin;
+          chart.options.scales.x.title.text = "X (m)";
+          chart.options.scales.y.title.text = "Y (m)";
+          chart.options.scales.y.min = 0;
           chart.options.scales.y.max = xyBounds.yMax;
-        } else if (selection === "yz") {
+        } else {
           chart.options.scales.x.min = yzBounds.xMin;
           chart.options.scales.x.max = yzBounds.xMax;
+          chart.options.scales.x.title.text = "Y (m)";
+          chart.options.scales.y.title.text = "Z (m)";
           chart.options.scales.y.min = yzBounds.yMin;
           chart.options.scales.y.max = yzBounds.yMax;
         }
-        chart.update('none'); // update without animation
+        chart.update('none');
       }
-      
-      // Initialize the chart with fixed axes and no animation.
+
+      // Initialize Chart.js instance.
       function initChart() {
         const ctx = document.getElementById("myChart").getContext("2d");
         chart = new Chart(ctx, {
@@ -129,23 +147,33 @@
               x: {
                 type: "linear",
                 position: "bottom",
-                title: { display: true, text: "X Value" },
-                // Set initial bounds to the current selection (default "xy")
+                title: { display: true, text: "X (m)" },
                 min: xyBounds.xMin,
                 max: xyBounds.xMax
               },
               y: {
-                title: { display: true, text: "Y Value" },
-                min: xyBounds.yMin,
+                title: { display: true, text: "Y (m)" },
+                min: 0,
                 max: xyBounds.yMax
               }
             }
           }
         });
       }
-      
-      // Real-time update: show one frame at a time.
+
+      // Start updates: if static mode, plot all points; if real-time, one frame at a time.
       function start() {
+        const mode = document.getElementById("modeSelect").value;
+        const mapping = getMappingFunction();
+
+        if (mode === "static") {
+          const allPoints = cleanedData.flatMap(frame => frame.points.map(mapping));
+          chart.data.datasets[0].data = allPoints;
+          chart.update();
+          currentIndex = cleanedData.length;
+          return;
+        }
+
         if (intervalId || cleanedData.length === 0) return;
         intervalId = setInterval(() => {
           if (currentIndex >= cleanedData.length) {
@@ -153,36 +181,36 @@
             return;
           }
           const frame = cleanedData[currentIndex];
-          const mapping = getMappingFunction();
           const newPoints = frame.points.map(mapping);
-          // Replace current dataset with new frame's points.
           chart.data.datasets[0].data = newPoints;
           chart.update();
           currentIndex++;
         }, updateInterval);
       }
-      
-      // Stop the interval.
+
       function stop() {
         clearInterval(intervalId);
         intervalId = null;
       }
-      
-      // Reset the chart and the frame index.
+
       function resetChart() {
         stop();
         currentIndex = 0;
         chart.data.datasets[0].data = [];
         chart.update();
       }
-      
-      // When the dropdown changes, update the chart scales.
+
+      // When plot type changes, update chart scales and reset.
       document.getElementById("plotSelect").addEventListener("change", () => {
         updateChartScales();
-        // Optionally, reset the chart if needed:
         resetChart();
       });
-      
+
+      // When mode changes, reset the chart.
+      document.getElementById("modeSelect").addEventListener("change", () => {
+        resetChart();
+      });
+
       window.addEventListener("DOMContentLoaded", () => {
         initChart();
         document.getElementById("startBtn").addEventListener("click", start);
