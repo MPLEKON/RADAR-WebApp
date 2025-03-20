@@ -26,8 +26,12 @@
                 <div class="btn-group">
                     <button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown">Data Selection</button>
                     <div class="dropdown-menu">
-                        <a class="dropdown-item" href="#">Y vs Frames</a>
-                        <a class="dropdown-item" href="#">Y vs Z</a>
+                        <a class="dropdown-item" href="#" data-chart="y_vs_frames">Y vs Frames</a>
+                        <a class="dropdown-item" href="#" data-chart="z_vs_frames">Z vs Frames</a>
+                        <a class="dropdown-item" href="#" data-chart="x_vs_frames">X vs Frames</a>
+                        <a class="dropdown-item" href="#" data-chart="y_vs_z">Y vs Z</a>
+                        <a class="dropdown-item" href="#" data-chart="x_vs_y">X vs Y</a>
+                        <a class="dropdown-item" href="#" data-chart="x_vs_z">X vs Z</a>
                     </div>
                 </div>
             </div> 
@@ -54,7 +58,7 @@
                 options: {},
                 plugins: []
             }
-            new Chart(ctx,chartConfig)
+            let myChart = new Chart(ctx,chartConfig)
             
             
         </script>
@@ -77,6 +81,97 @@
                     }
                 });
             });
+        </script>
+        <script>
+            document.addEventListener("DOMContentLoaded", () => {
+                const dropdownItems = document.querySelectorAll(".dropdown-item");
+
+                dropdownItems.forEach(item => {
+                    item.addEventListener("click", (event) => {
+                        event.preventDefault();
+                        const selectedChart = event.target.getAttribute("data-chart");
+                        console.log("Selected Chart:", selectedChart);
+
+                        // Call a function to update the chart based on selection
+                        updateChart(selectedChart);
+                    });
+                });
+            });
+
+            function updateChart(chartType) {
+                console.log("Updating chart to:", chartType);
+
+                let newData;
+                switch (chartType) {
+                    case "x_vs_frames":
+                        newData = {
+                            datasets: [{
+                                label: "X vs Frames",
+                                data: parsedData.flatMap(frame =>
+                                    frame.points.map(point => ({ x: frame.frameNum, y: point.x }))
+                                )
+                            }]
+                        };
+                        break;
+                    case "y_vs_frames":
+                        newData = {
+                            datasets: [{
+                                label: "Y vs Frames",
+                                data: parsedData.flatMap(frame =>
+                                    frame.points.map(point => ({ x: frame.frameNum, y: point.y }))
+                                )
+                            }]
+                        };
+                        break;
+                    case "z_vs_frames":
+                        newData = {
+                            datasets: [{
+                                label: "Z vs Frames",
+                                data: parsedData.flatMap(frame =>
+                                    frame.points.map(point => ({ x: frame.frameNum, y: point.z }))
+                                )
+                            }]
+                        };
+                        break;
+                    case "x_vs_y":
+                        newData = {
+                            datasets: [{
+                                label: "X vs Y",
+                                data: parsedData.flatMap(frame =>
+                                    frame.points.map(point => ({ x: point.x, y: point.y }))
+                                )
+                            }]
+                        };
+                        break;
+                    case "x_vs_z":
+                        newData = {
+                            datasets: [{
+                                label: "X vs Z",
+                                data: parsedData.flatMap(frame =>
+                                    frame.points.map(point => ({ x: point.x, y: point.z }))
+                                )
+                            }]
+                        };
+                        break;
+                    case "y_vs_z":
+                        newData = {
+                            datasets: [{
+                                label: "Y vs Z",
+                                data: parsedData.flatMap(frame =>
+                                    frame.points.map(point => ({ x: point.y, y: point.z }))
+                                )
+                            }]
+                        };
+                        break;
+                    default:
+                        console.error("Unknown chart type:", chartType);
+                        return;
+                }
+                
+                myChart.data = newData;
+                myChart.update();
+            }
+
         </script>
     </body>
 </html>
