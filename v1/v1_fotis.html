@@ -1,121 +1,200 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Real-Time X-Y Chart with Fixed Axes & Single Frame</title>
-  <link 
-    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
-    rel="stylesheet"
-    crossorigin="anonymous">
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
-</head>
-<body>
-  <div class="container my-4">
-    <h1 class="text-center mb-4">Real-Time X-Y Chart (One Frame at a Time)</h1>
-    <div class="mb-3 text-center">
-      <button id="startBtn" class="btn btn-primary me-2">Start</button>
-      <button id="stopBtn" class="btn btn-secondary me-2">Stop</button>
-      <button id="resetBtn" class="btn btn-danger">Reset</button>
-    </div>
-    <div class="card">
-      <div class="card-body" style="height: 70vh;">
-        <canvas id="myChart"></canvas>
+  <head>
+    <meta charset="UTF-8">
+    <title>Real-Time X-Y / Y-Z Chart with Fixed Axes</title>
+    <!-- Bootstrap CSS -->
+    <link 
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" 
+      rel="stylesheet" 
+      crossorigin="anonymous">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Papa Parse -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+  </head>
+  <body>
+    <div class="container my-4">
+      <h1 class="text-center mb-4">Real-Time Chart</h1>
+      <!-- Dropdown to select plot type -->
+      <div class="mb-3 text-center">
+        <label for="plotSelect" class="form-label me-2">Plot Type:</label>
+        <select id="plotSelect" class="form-select d-inline-block w-auto">
+          <option value="xy" selected>X-Y</option>
+          <option value="yz">Y-Z</option>
+        </select>
+      </div>
+      <!-- Control Buttons -->
+      <div class="mb-3 text-center">
+        <button id="startBtn" class="btn btn-primary me-2">Start</button>
+        <button id="stopBtn" class="btn btn-secondary me-2">Stop</button>
+        <button id="resetBtn" class="btn btn-danger">Reset</button>
+      </div>
+      <div class="card">
+        <!-- Set a flexible height for responsiveness -->
+        <div class="card-body" style="height: 70vh;">
+          <canvas id="myChart"></canvas>
+        </div>
       </div>
     </div>
-  </div>
 
-  <script type="module">
-    import { csvData } from "./csvFotis.js";
-    import { parseAndCleanCSV } from "./dataParser.js";
+    <!-- Import external CSV data and parsing library via modules -->
+    <script type="module" src="csvFotis.js"></script>
+    <script type="module">
+      import { csvData } from "./csvFotis.js";
+      import { parseAndCleanCSV } from "./dataParser.js";
 
-    const cleanedData = parseAndCleanCSV(csvData);
-    console.log("Cleaned Data:", cleanedData);
+      // Parse and clean the CSV data.
+      const cleanedData = parseAndCleanCSV(csvData);
+      console.log("Cleaned Data:", cleanedData);
+      
+      if (cleanedData.length === 0) {
+        console.warn("No valid frames found.");
+      }
+      
+      // Compute bounds for both mappings:
+      const allXValues = cleanedData.flatMap(frame => frame.points.map(pt => pt.x));
+      const allYValues = cleanedData.flatMap(frame => frame.points.map(pt => pt.y));
+      const allZValues = cleanedData.flatMap(frame => frame.points.map(pt => pt.z));
+      
+      // For X-Y plot:
+      const xyBounds = {
+        xMin: Math.min(...allXValues),
+        xMax: Math.max(...allXValues),
+        yMin: Math.min(...allYValues),
+        yMax: Math.max(...allYValues)
+      };
+      
+      // For Y-Z plot:
+      const yzBounds = {
+        xMin: Math.min(...allYValues),
+        xMax: Math.max(...allYValues),
+        yMin: Math.min(...allZValues),
+        yMax: Math.max(...allZValues)
+      };
 
-    const allXValues = cleanedData.flatMap(f => f.points.map(pt => pt.x));
-    const allYValues = cleanedData.flatMap(f => f.points.map(pt => pt.y));
-    const xMin = -10;
-    const xMax = Math.max(...allXValues);
-    const yMin = 0;
-    const yMax = Math.max(...allYValues) + 5;
-
-    let chart;
-    let intervalId;
-    let currentIndex = 0;
-    const updateInterval = 50;
-
-    function initChart() {
-      const ctx = document.getElementById("myChart").getContext("2d");
-      chart = new Chart(ctx, {
-        type: "scatter",
-        data: {
-          datasets: [{
-            label: "X-Y Data",
-            data: [],
-            backgroundColor: "rgba(75, 192, 192, 0.6)",
-            borderColor: "rgba(75, 192, 192, 1)"
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false, // Key for resizing properly
-          animation: false,
-          scales: {
-            x: {
-              type: "linear",
-              position: "bottom",
-              title: { display: true, text: "X Value" },
-              min: xMin,
-              max: xMax
-            },
-            y: {
-              title: { display: true, text: "Y Value" },
-              min: yMin,
-              max: yMax
+      console.log("XY Bounds:", xyBounds);
+      console.log("YZ Bounds:", yzBounds);
+      
+      let chart;           // Chart.js instance
+      let intervalId;      // Timer for setInterval
+      let currentIndex = 0; // Which frame to display next
+      const updateInterval = 50; // 50ms update
+      
+      // Returns the mapping function based on current dropdown selection.
+      function getMappingFunction() {
+        const selection = document.getElementById("plotSelect").value;
+        if (selection === "xy") {
+          return pt => ({ x: pt.x, y: pt.y });
+        } else if (selection === "yz") {
+          return pt => ({ x: pt.y, y: pt.z });
+        }
+      }
+      
+      // Updates the chart scales based on the current selection.
+      function updateChartScales() {
+        const selection = document.getElementById("plotSelect").value;
+        if (selection === "xy") {
+          chart.options.scales.x.min = xyBounds.xMin;
+          chart.options.scales.x.max = xyBounds.xMax;
+          chart.options.scales.y.min = xyBounds.yMin;
+          chart.options.scales.y.max = xyBounds.yMax;
+        } else if (selection === "yz") {
+          chart.options.scales.x.min = yzBounds.xMin;
+          chart.options.scales.x.max = yzBounds.xMax;
+          chart.options.scales.y.min = yzBounds.yMin;
+          chart.options.scales.y.max = yzBounds.yMax;
+        }
+        chart.update('none'); // update without animation
+      }
+      
+      // Initialize the chart with fixed axes and no animation.
+      function initChart() {
+        const ctx = document.getElementById("myChart").getContext("2d");
+        chart = new Chart(ctx, {
+          type: "scatter",
+          data: {
+            datasets: [{
+              label: "Data",
+              data: [],
+              backgroundColor: "rgba(75, 192, 192, 0.6)",
+              borderColor: "rgba(75, 192, 192, 1)"
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            animation: false,
+            scales: {
+              x: {
+                type: "linear",
+                position: "bottom",
+                title: { display: true, text: "X Value" },
+                // Set initial bounds to the current selection (default "xy")
+                min: xyBounds.xMin,
+                max: xyBounds.xMax
+              },
+              y: {
+                title: { display: true, text: "Y Value" },
+                min: xyBounds.yMin,
+                max: xyBounds.yMax
+              }
             }
           }
-        }
-      });
-    }
-
-    function start() {
-      if (intervalId || cleanedData.length === 0) return;
-      intervalId = setInterval(() => {
-        if (currentIndex >= cleanedData.length) {
-          stop();
-          return;
-        }
-        const frame = cleanedData[currentIndex];
-        const newPoints = frame.points.map(pt => ({ x: pt.x, y: pt.y }));
-        chart.data.datasets[0].data = newPoints;
+        });
+      }
+      
+      // Real-time update: show one frame at a time.
+      function start() {
+        if (intervalId || cleanedData.length === 0) return;
+        intervalId = setInterval(() => {
+          if (currentIndex >= cleanedData.length) {
+            stop();
+            return;
+          }
+          const frame = cleanedData[currentIndex];
+          const mapping = getMappingFunction();
+          const newPoints = frame.points.map(mapping);
+          // Replace current dataset with new frame's points.
+          chart.data.datasets[0].data = newPoints;
+          chart.update();
+          currentIndex++;
+        }, updateInterval);
+      }
+      
+      // Stop the interval.
+      function stop() {
+        clearInterval(intervalId);
+        intervalId = null;
+      }
+      
+      // Reset the chart and the frame index.
+      function resetChart() {
+        stop();
+        currentIndex = 0;
+        chart.data.datasets[0].data = [];
         chart.update();
-        currentIndex++;
-      }, updateInterval);
-    }
+      }
+      
+      // When the dropdown changes, update the chart scales.
+      document.getElementById("plotSelect").addEventListener("change", () => {
+        updateChartScales();
+        // Optionally, reset the chart if needed:
+        resetChart();
+      });
+      
+      window.addEventListener("DOMContentLoaded", () => {
+        initChart();
+        document.getElementById("startBtn").addEventListener("click", start);
+        document.getElementById("stopBtn").addEventListener("click", stop);
+        document.getElementById("resetBtn").addEventListener("click", resetChart);
+      });
+    </script>
 
-    function stop() {
-      clearInterval(intervalId);
-      intervalId = null;
-    }
-
-    function resetChart() {
-      stop();
-      currentIndex = 0;
-      chart.data.datasets[0].data = [];
-      chart.update();
-    }
-
-    window.addEventListener("DOMContentLoaded", () => {
-      initChart();
-      document.getElementById("startBtn").addEventListener("click", start);
-      document.getElementById("stopBtn").addEventListener("click", stop);
-      document.getElementById("resetBtn").addEventListener("click", resetChart);
-    });
-  </script>
-
-  <script 
-    src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
-    crossorigin="anonymous">
-  </script>
-</body>
+    <!-- Bootstrap JS Bundle (optional) -->
+    <script 
+      src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" 
+      crossorigin="anonymous">
+    </script>
+  </body>
 </html>
