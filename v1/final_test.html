@@ -48,8 +48,45 @@
         </div>
 
         <script>
+            const maxFrames = parsedData.length -1;
+            const allXValues = parsedData.flatMap(frame => {
+                if (!frame.points || !Array.isArray(frame.points)) {
+                    console.error("Error: Frame has no `points` field:", frame);
+                    return [];
+                }
+                return frame.points.map(pt => pt.x);
+            });
+
+            const allYValues = parsedData.flatMap(frame => {
+                if (!frame.points || !Array.isArray(frame.points)) return [];
+                return frame.points.map(pt => pt.y);
+            });
+
+            const allZValues = parsedData.flatMap(frame => {
+                if (!frame.points || !Array.isArray(frame.points)) return [];
+                return frame.points.map(pt => pt.z);
+            });
+
+            const validXValues = allXValues.filter(v => !isNaN(v));
+            const validYValues = allYValues.filter(v => !isNaN(v));
+            const validZValues = allZValues.filter(v => !isNaN(v));
+
+                globalExtremes = {
+                    xMin: Math.floor(Math.min(...validXValues)),
+                    xMax: Math.ceil(Math.max(...validXValues)),
+                    yMin: Math.floor(Math.min(...validYValues)),
+                    yMax: Math.ceil(Math.max(...validYValues)),
+                    zMin: Math.floor(Math.min(...validZValues)),
+                    zMax: Math.ceil(Math.max(...validZValues))
+                };
+
+            console.log("🔍 Checking for NaN values in X:", allXValues.some(isNaN));
+            console.log("🔍 Checking for NaN values in Y:", allYValues.some(isNaN));
+            console.log("🔍 Checking for NaN values in Z:", allZValues.some(isNaN));
+
             let intervalId = null
             window.realtime = false;
+
             ctx = document.getElementById('myChart');
             const config = {
                 type: 'scatter',
@@ -64,21 +101,10 @@
                     animation: false
                 }
                 };
+
             myChart = new Chart(ctx,config);
 
-            const allXValues = parsedData.flatMap(frame => frame.points.map(pt => pt.x));
-            const allYValues = parsedData.flatMap(frame => frame.points.map(pt => pt.y));
-            const allZValues = parsedData.flatMap(frame => frame.points.map(pt => pt.z));
-            const maxFrames = parsedData.length -1;
-
-            const globalExtremes = {
-                xMin: Math.floor(Math.min(...allXValues)),
-                xMax: Math.ceil(Math.max(...allXValues)),
-                yMin: Math.floor(Math.min(...allYValues)),
-                yMax: Math.ceil(Math.max(...allYValues)),
-                zMin: Math.floor(Math.min(...allZValues)),
-                zMax: Math.ceil(Math.max(...allZValues))
-            };
+            console.log("Global: ",globalExtremes);
 
             document.getElementById('realTimeSwitch').addEventListener('change', function() {
                 let switchStatus = this.checked ? "ON" : "OFF";
@@ -107,8 +133,6 @@
             document.addEventListener('DOMContentLoaded', (event) => {
                 const htmlElement = document.documentElement;
                 const switchElement = document.getElementById('darkModeSwitch');
-
-                // Set the default theme to dark if no setting is found in local storage
                 const currentTheme = localStorage.getItem('bsTheme') || 'dark';
                 htmlElement.setAttribute('data-bs-theme', currentTheme);
                 switchElement.checked = currentTheme === 'dark';
@@ -125,74 +149,76 @@
 
             function updateChartScales(selectedChart) {
                 console.log("Updating chart scales for:", selectedChart);
-            
+
+
                 switch (selectedChart) {
                     case "y_vs_frames":
-                        myChart.options.scales.x.min = 0; 
+                        myChart.options.scales.x.min = 0;
                         myChart.options.scales.x.max = maxFrames;
-                        myChart.options.scales.y.min = globalExtremes.yMin; 
-                        myChart.options.scales.y.max = globalExtremes.yMax; 
-                        myChart.options.scales.x.title = {display: true, text: "Frame"}
-                        myChart.options.scales.y.title = {display: true, text: "Y (m)"}
-                        myChart.options.plugins.title = {display: true, text: "Y vs Frames"};                      
+                        myChart.options.scales.y.min = globalExtremes.yMin;
+                        myChart.options.scales.y.max = globalExtremes.yMax;
+                        myChart.options.scales.x.title = { display: true, text: "Frame" };
+                        myChart.options.scales.y.title = { display: true, text: "Y (m)" };
+                        myChart.options.plugins.title = { display: true, text: "Y vs Frames" };
                         break;
 
                     case "z_vs_frames":
-                        myChart.options.scales.x.min = 0; 
-                        myChart.options.scales.x.max = maxFrames; 
-                        myChart.options.scales.y.min = globalExtremes.zMin; 
-                        myChart.options.scales.y.max = globalExtremes.zMax; 
-                        myChart.options.scales.x.title = {display: true, text: "Frame"}
-                        myChart.options.scales.y.title = {display: true, text: "Z (m)"}
-                        myChart.options.plugins.title = {display: true, text: "Z vs Frames"};     
+                        myChart.options.scales.x.min = 0;
+                        myChart.options.scales.x.max = maxFrames;
+                        myChart.options.scales.y.min =  globalExtremes.zMin;
+                        myChart.options.scales.y.max =  globalExtremes.zMax;
+                        myChart.options.scales.x.title = { display: true, text: "Frame" };
+                        myChart.options.scales.y.title = { display: true, text: "Z (m)" };
+                        myChart.options.plugins.title = { display: true, text: "Z vs Frames" };
                         break;
 
                     case "x_vs_frames":
-                        myChart.options.scales.x.min = 0; 
-                        myChart.options.scales.x.max = maxFrames; 
-                        myChart.options.scales.y.min = globalExtremes.xMin; 
-                        myChart.options.scales.y.max = globalExtremes.xMax; 
-                        myChart.options.scales.x.title = {display: true, text: "Frame"}
-                        myChart.options.scales.y.title = {display: true, text: "X (m)"}
-                        myChart.options.plugins.title = {display: true, text: "X vs Frames"};     
+                        myChart.options.scales.x.min = 0;
+                        myChart.options.scales.x.max = maxFrames;
+                        myChart.options.scales.y.min =  globalExtremes.xMin;
+                        myChart.options.scales.y.max =  globalExtremes.xMax;
+                        myChart.options.scales.x.title = { display: true, text: "Frame" };
+                        myChart.options.scales.y.title = { display: true, text: "X (m)" };
+                        myChart.options.plugins.title = { display: true, text: "X vs Frames" };
                         break;
 
                     case "y_vs_z":
-                        myChart.options.scales.x.min = globalExtremes.zMin; 
-                        myChart.options.scales.x.max = globalExtremes.zMax; 
-                        myChart.options.scales.y.min = globalExtremes.yMin; 
-                        myChart.options.scales.y.max = globalExtremes.yMax; 
-                        myChart.options.scales.x.title = {display: true, text: "Z (m)"}
-                        myChart.options.scales.y.title = {display: true, text: "Y (m)"}
-                        myChart.options.plugins.title = {display: true, text: "Y vs Z"};     
+                        myChart.options.scales.x.min =  globalExtremes.zMin;
+                        myChart.options.scales.x.max =  globalExtremes.zMax;
+                        myChart.options.scales.y.min =  globalExtremes.yMin;
+                        myChart.options.scales.y.max =  globalExtremes.yMax;
+                        myChart.options.scales.x.title = { display: true, text: "Z (m)" };
+                        myChart.options.scales.y.title = { display: true, text: "Y (m)" };
+                        myChart.options.plugins.title = { display: true, text: "Y vs Z" };
                         break;
 
                     case "x_vs_y":
-                        myChart.options.scales.x.min = globalExtremes.yMin;
-                        myChart.options.scales.x.max = globalExtremes.yMax;
-                        myChart.options.scales.y.min = globalExtremes.xMin; 
-                        myChart.options.scales.y.max = globalExtremes.xMax; 
-                        myChart.options.scales.x.title = {display: true, text: "Y (m)"}
-                        myChart.options.scales.y.title = {display: true, text: "X (m)"}
-                        myChart.options.plugins.title = {display: true, text: "X vs Y"};     
+                        myChart.options.scales.x.min =  globalExtremes.yMin;
+                        myChart.options.scales.x.max =  globalExtremes.yMax;
+                        myChart.options.scales.y.min =  globalExtremes.xMin;
+                        myChart.options.scales.y.max =  globalExtremes.xMax;
+                        myChart.options.scales.x.title = { display: true, text: "Y (m)" };
+                        myChart.options.scales.y.title = { display: true, text: "X (m)" };
+                        myChart.options.plugins.title = { display: true, text: "X vs Y" };
                         break;
 
                     case "x_vs_z":
-                        myChart.options.scales.x.min = globalExtremes.zMin; 
-                        myChart.options.scales.x.max = globalExtremes.zMax; 
-                        myChart.options.scales.y.min = globalExtremes.xMin; 
-                        myChart.options.scales.y.max = globalExtremes.xMax; 
-                        myChart.options.scales.x.title = {display: true, text: "Z (m)"}
-                        myChart.options.scales.y.title = {display: true, text: "X (m)"}
-                        myChart.options.plugins.title = {display: true, text: "X vs Z"};     
+                        myChart.options.scales.x.min =  globalExtremes.zMin;
+                        myChart.options.scales.x.max =  globalExtremes.zMax;
+                        myChart.options.scales.y.min =  globalExtremes.xMin;
+                        myChart.options.scales.y.max =  globalExtremes.xMax;
+                        myChart.options.scales.x.title = { display: true, text: "Z (m)" };
+                        myChart.options.scales.y.title = { display: true, text: "X (m)" };
+                        myChart.options.plugins.title = { display: true, text: "X vs Z" };
                         break;
 
                     default:
                         console.log("Unknown chart selection.");
                         return;
                 }
-                myChart.update(); // Apply the new scale settings
+                myChart.update();
             }
+
 
             function mapStaticData(selectedChart) {
                 let dataPoints = [];
@@ -238,18 +264,21 @@
                         return;
                 }
 
-                console.log("Mapped Data Points:", dataPoints); // Debugging output
+                console.log("Mapped Data Points:", dataPoints);
 
                 myChart.data.datasets[0].data = dataPoints;
                 myChart.update();
             }
-            function startRealTime(interval = 50, selectedChart) { // Default interval: 500ms per frame
-                if (intervalId) clearInterval(intervalId); // Clear any existing interval
-                currentFrameIndex = 0; // Reset frame index
+            let paused = false; 
+            let currentFrameIndex = 0
+            function startRealTime(interval = 50, selectedChart) { 
+                if (intervalId) clearInterval(intervalId); 
+
                 intervalId = setInterval(() => {
+                    if (paused) return;
+
                     if (currentFrameIndex >= parsedData.length) {
-                        clearInterval(intervalId); // Stop when all frames are displayed
-                        console.log("All frames displayed.");
+                        console.log("🔄 Looping back to first frame...");
                         currentFrameIndex = 0;
                     }
 
@@ -287,15 +316,38 @@
                             return;
                     }
 
-                    console.log(`Displaying real-time frame: ${currentFrameIndex}, Chart: ${selectedChart}`);
+                    console.log(`Displaying frame: ${currentFrameIndex}, Chart: ${selectedChart}`);
 
-                    // ✅ Update only the data, without touching titles or scales
                     myChart.data.datasets[0].data = dataPoints;
-                    myChart.update();
+                    myChart.update(); 
 
-                    currentFrameIndex++; // Move to the next frame
+                    currentFrameIndex++; 
                 }, interval);
             }
+
+
+            function pauseRealTime() {
+                console.log("⏸ Pausing playback...");
+                paused = true; 
+                clearInterval(intervalId); 
+            }
+
+            document.querySelector(".btn-success").addEventListener("click", function() {
+                if (paused) {
+                    console.log("Resuming real-time playback...");
+                    paused = false;
+                } else {
+                    console.log("Starting real-time playback...");
+                    startRealTime(50, selectedChart);
+                }
+            });
+
+            document.querySelector(".btn-danger").addEventListener("click", function() {
+                console.log("Pausing real-time playback...");
+                paused = true;
+            });
+
+
 
 
         </script>
