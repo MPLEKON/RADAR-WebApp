@@ -21,7 +21,7 @@
             </div>
             <h1>This is a bootstrap container</h1>
             <div class="form-check form-switch">
-                <input class="form-check-input" type="checkbox" id="realTimeSwitch">
+                <input class="form-check-input" type="checkbox" id="realTimeSwitch" checked = false>
                 <label class="form-check-label" for="realTimeSwitch">Real-Time Mode</label>
             </div>
             <div class="btn-group">
@@ -155,8 +155,8 @@
                     case "y_vs_frames":
                         myChart.options.scales.x.min = 0;
                         myChart.options.scales.x.max = maxFrames;
-                        myChart.options.scales.y.min = globalExtremes.yMin;
-                        myChart.options.scales.y.max = globalExtremes.yMax;
+                        myChart.options.scales.y.min = 0;
+                        myChart.options.scales.y.max = globalExtremes.yMax+10;
                         myChart.options.scales.x.title = { display: true, text: "Frame" };
                         myChart.options.scales.y.title = { display: true, text: "Y (m)" };
                         myChart.options.plugins.title = { display: true, text: "Y vs Frames" };
@@ -166,7 +166,7 @@
                         myChart.options.scales.x.min = 0;
                         myChart.options.scales.x.max = maxFrames;
                         myChart.options.scales.y.min =  globalExtremes.zMin;
-                        myChart.options.scales.y.max =  globalExtremes.zMax;
+                        myChart.options.scales.y.max =  globalExtremes.zMax +10;
                         myChart.options.scales.x.title = { display: true, text: "Frame" };
                         myChart.options.scales.y.title = { display: true, text: "Z (m)" };
                         myChart.options.plugins.title = { display: true, text: "Z vs Frames" };
@@ -185,16 +185,16 @@
                     case "y_vs_z":
                         myChart.options.scales.x.min =  globalExtremes.zMin;
                         myChart.options.scales.x.max =  globalExtremes.zMax;
-                        myChart.options.scales.y.min =  globalExtremes.yMin;
-                        myChart.options.scales.y.max =  globalExtremes.yMax;
+                        myChart.options.scales.y.min =  0;
+                        myChart.options.scales.y.max =  globalExtremes.yMax +10;
                         myChart.options.scales.x.title = { display: true, text: "Z (m)" };
                         myChart.options.scales.y.title = { display: true, text: "Y (m)" };
                         myChart.options.plugins.title = { display: true, text: "Y vs Z" };
                         break;
 
                     case "x_vs_y":
-                        myChart.options.scales.x.min =  globalExtremes.yMin;
-                        myChart.options.scales.x.max =  globalExtremes.yMax;
+                        myChart.options.scales.x.min =  0;
+                        myChart.options.scales.x.max =  globalExtremes.yMax +10;
                         myChart.options.scales.y.min =  globalExtremes.xMin;
                         myChart.options.scales.y.max =  globalExtremes.xMax;
                         myChart.options.scales.x.title = { display: true, text: "Y (m)" };
