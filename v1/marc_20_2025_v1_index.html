@@ -19,7 +19,48 @@
                 <input class="form-check-input" type="checkbox" id="darkModeSwitch">
                 <label class="form-check-label" for="darkModeSwitch">Dark Mode</label>
             </div>
-            <h1>This is a bootstrap container</h1>
+            <div class="container mt-3">
+                <div class="row justify-content-center">
+                    <div class="col-md-5 card p-2 text-center me-md-2">
+                        <h6 class="text-center">Contributors</h6>
+                        <ul class="list-unstyled small">
+                            <li>
+                                <a href="https://www.linkedin.com/in/fotios-papadopoulos-22722b299/" target="_blank">
+                                    <img src="linkedin_logo.png" alt="LinkedIn" class="me-1" width="20">
+                                </a> Fotios Papadopoulos
+                            </li>
+                            <li>
+                                <a href="https://www.linkedin.com/in/ioannis-christopoulos-3abab6227/" target="_blank">
+                                    <img src="linkedin_logo.png" alt="LinkedIn" class="me-1" width="20">
+                                </a> Ioannis Christopoulos
+                            </li>
+                        </ul>
+                    </div>
+            
+                    <div class="col-md-5 card p-2 ms-md-2 text-center">
+                        <h6 class="text-center">Supervisors</h6>
+                        <ul class="list-unstyled small">
+                            <li>
+                                <a href="https://www.ntnu.edu/employees/henrique.gaspar" target="_blank">
+                                    <img src="ntnu_logo.png" alt="NTNU Logo" class="me-1" width="20">
+                                </a> Henrique M. Gaspar
+                            </li>
+                            <li>
+                                <a href="https://eee.uniwa.gr/el/index.php?option=com_content&view=article&id=112" target="_blank">
+                                    <img src="uniwa_logo.png" alt="UNIWA Logo" class="me-1" width="20">
+                                </a> Stelios Mitilineos
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="card p-3 mt-4 text-center">
+                <p class="small mb-0 text-justify">
+                    This project is a collaboration between the University of West Attica (UniWA) and the Norwegian University of Science and Technology (NTNU), focusing on the visual representation of real-world radar data collected from FMCW (Frequency-Modulated Continuous Wave) radars mounted on a Ro-Ro passenger ship. The primary objective is to track the backscattered dock signal and accurately determine its distance, improving situational awareness and docking precision in maritime environments, particularly during berthing.<br><br>
+                    The radar captures all the detected objects that are within a 50-meter range at 20Hz. Each detected object consists of 3D coordinates, radial velocity in m/s, and SNR in dB.<br><br>
+                    The first four charts show the detected objects over a 1-minute duration (static), while the last two charts simulate real-time detection.
+                </p>
+            </div>
             <div class="form-check form-switch">
                 <input class="form-check-input" type="checkbox" id="realTimeSwitch" checked = false>
                 <label class="form-check-label" for="realTimeSwitch">Real-Time Mode</label>
@@ -359,5 +400,14 @@
 
 
         </script>
+                <footer class="bg-dark text-light text-center py-3 mt-4 border-top">
+                    <small>
+                    © 2025 UniWA & NTNU – Radar Data Visualization |
+                    <a href="https://github.com/MPLEKON/RADAR-WebApp" target="_blank" class="text-decoration-none text-info">
+                        <img src="https://cdn.jsdelivr.net/npm/simple-icons@v9/icons/github.svg" alt="GitHub" width="18" style="vertical-align: middle; margin-right: 4px;">
+                        View on GitHub
+                    </a>
+                    </small>
+                </footer>
     </body>     
 </html>

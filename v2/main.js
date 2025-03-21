@@ -1,6 +1,6 @@
 import { parseCSV } from './v2_csv_giannis.js';
 
-console.log("🚀 main.js loaded");
+console.log("main.js loaded");
 
 let parsedData = [];
 let globalExtremes = {};
