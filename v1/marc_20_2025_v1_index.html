@@ -106,20 +106,9 @@
 
             console.log("Global: ",globalExtremes);
 
-            document.getElementById('realTimeSwitch').addEventListener('change', function() {
-                let switchStatus = this.checked ? "ON" : "OFF";
-                console.log("Real time is:", switchStatus);
-                if (this.checked){
-                    window.realtime = true;
-                }
-                else {
-                    window.realtime = false;
-                }
-            });
-
             document.querySelectorAll('.dropdown-item').forEach(item => {
                 item.addEventListener('click', function() {
-                let selectedValue = this.getAttribute('data-chart');
+                window.selectedValue = this.getAttribute('data-chart');
                 updateChartScales(selectedValue);
                 if (realtime == true){
                     startRealTime(interval = 50,selectedValue);
@@ -129,6 +118,25 @@
                 }
                 });
             });
+
+            document.getElementById('realTimeSwitch').addEventListener('change', function() {
+                let switchStatus = this.checked ? "ON" : "OFF";
+                console.log("Real time is:", switchStatus);
+                if (this.checked){
+                    window.realtime = true;
+                    paused = false;
+                    startRealTime(interval = 50, selectedValue);
+                }
+                else {
+                    window.realtime = false;
+                    paused = true; 
+                    clearInterval(intervalId); 
+                    intervalId = null; 
+                    mapStaticData(selectedValue)
+                }
+            });
+
+
 
             document.addEventListener('DOMContentLoaded', (event) => {
                 const htmlElement = document.documentElement;
