@@ -98,7 +98,7 @@ function setupEventHandlers() {
             } else {
                 mapStaticData(selectedValue);
             }
-        });
+        });  
     });
 
     document.getElementById('realTimeSwitch').addEventListener('change', function () {
