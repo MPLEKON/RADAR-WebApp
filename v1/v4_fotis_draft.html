@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <!-- Load Plotly and d3.js -->
+  <script src="https://cdn.plot.ly/plotly-3.0.1.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.17/d3.min.js"></script>
+</head>
+<body>
+  <div id="myDiv" style="width: 100%; height: 100vh;"></div>
+
+  <script>
+    var csvUrl = 'https://raw.githubusercontent.com/MPLEKON/RADAR-WebApp/refs/heads/main/v1/detected_objects_filtered_1000rowsless.csv';
+
+    // Load CSV once
+    d3.csv(csvUrl, function(err, rows) {
+      if (err) {
+        console.error('Error loading CSV:', err);
+        return;
+      }
+      
+      // Compute global min and max for x, y, and z from all frames
+      var globalX = [], globalY = [], globalZ = [];
+      rows.forEach(function(row) {
+        var detected = row["Detected Objects"];
+        if (detected && detected.trim() !== "[]" && detected.trim() !== "") {
+          var objectsStr = detected.substring(1, detected.length - 1);
+          var objectStrings = objectsStr.split("], [");
+          objectStrings.forEach(function(objStr) {
+            objStr = objStr.replace("[", "").replace("]", "");
+            var values = objStr.split(",").map(function(v) { return parseFloat(v.trim()); });
+            if (values.length >= 3) {
+              globalX.push(values[0]);
+              globalY.push(values[1]);
+              globalZ.push(values[2]);
+            }
+          });
+        }
+      });
+      
+      // Determine axis ranges using d3.min/d3.max
+      var xMin = d3.min(globalX), xMax = d3.max(globalX);
+      var yMin = d3.min(globalY), yMax = d3.max(globalY);
+      var zMin = d3.min(globalZ), zMax = d3.max(globalZ);
+      
+      // Layout with fixed axis ranges
+      var layout = {
+        margin: { l: 0, r: 0, b: 0, t: 0 },
+        scene: {
+          xaxis: { range: [xMin, xMax] },
+          yaxis: { range: [yMin, yMax] },
+          zaxis: { range: [zMin, zMax] }
+        }
+      };
+      
+      // Dummy trace to always maintain the axis view (invisible markers)
+      var dummyTrace = {
+        x: [xMin, xMax],
+        y: [yMin, yMax],
+        z: [zMin, zMax],
+        mode: 'markers',
+        marker: {
+          size: 0.1,
+          opacity: 0  // completely transparent
+        },
+        type: 'scatter3d',
+        hoverinfo: 'none',
+        showlegend: false
+      };
+      
+      var currentFrame = 0;
+      
+      // Initialize plot with dummy trace (and empty actual trace)
+      Plotly.newPlot('myDiv', [dummyTrace], layout);
+      
+      function updateFrame() {
+        if (currentFrame >= rows.length) {
+          currentFrame = 0; // restart from first frame
+        }
+        
+        var row = rows[currentFrame];
+        var xValues = [], yValues = [], zValues = [];
+        var detected = row["Detected Objects"];
+        if (detected && detected.trim() !== "[]" && detected.trim() !== "") {
+          var objectsStr = detected.substring(1, detected.length - 1);
+          var objectStrings = objectsStr.split("], [");
+          objectStrings.forEach(function(objStr) {
+            objStr = objStr.replace("[", "").replace("]", "");
+            var values = objStr.split(",").map(function(v) { return parseFloat(v.trim()); });
+            if (values.length >= 3) {
+              xValues.push(values[0]);
+              yValues.push(values[1]);
+              zValues.push(values[2]);
+            }
+          });
+        }
+        
+        // Actual trace for current frame (may be empty if no detected objects)
+        var frameTrace = {
+          x: xValues,
+          y: yValues,
+          z: zValues,
+          mode: 'markers',
+          marker: { size: 5, opacity: 0.8 },
+          type: 'scatter3d'
+        };
+        
+        // Update plot with dummy trace plus the frame data
+        Plotly.react('myDiv', [dummyTrace, frameTrace], layout);
+        console.log("Displaying frame:", row["Frame Number"]);
+        currentFrame++;
+      }
+      
+      // Update the frame every 50ms
+      setInterval(updateFrame, 50);
+    });
+  </script>
+</body>
+</html>
