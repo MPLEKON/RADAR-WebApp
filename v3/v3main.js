@@ -102,7 +102,8 @@ document.getElementById('csvFileInput').addEventListener('change', async (event)
 
 function setupEventHandlers() {
     document.querySelectorAll('.dropdown-item').forEach(item => {
-        item.addEventListener('click', function () {
+        item.addEventListener('click', function (event) {
+            event.preventDefault(); // Prevent the default anchor behavior
             selectedValue = this.getAttribute('data-chart');
             updateChartScales(selectedValue);
             if (realtime) {
@@ -110,7 +111,7 @@ function setupEventHandlers() {
             } else {
                 mapStaticData(selectedValue);
             }
-        });
+        });  
     });
 
     document.getElementById('realTimeSwitch').addEventListener('change', function () {
