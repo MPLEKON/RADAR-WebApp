@@ -66,9 +66,5 @@ To run this project locally:
 1. **Clone the repository:**
    ```bash
    git clone https://github.com/MPLEKON/RADAR-WebApp.git
-2. **Navigate to the project directory:**
-   ```bash
-    cd WebBased3DRadarVisualization
-3. **Open index.html in your browser.**
-   ```bash
+2. **Open index.html in your browser.**
     No additional installation is required since this is a web-based application.
