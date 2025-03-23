@@ -56,7 +56,7 @@ document.getElementById('csvFileInput').addEventListener('change', async (event)
 
         // Ready for visualization
         initThreeScene(); // 🔥 Initialize the Three.js scene
-        renderStatic3D(parsedData); // Or startRealTime3D() if you want animation
+        renderAllFrames(parsedData); // Or startRealTime3D() if you want animation
 
     } catch (error) {
         console.error("❌ Error loading JS file:", error);

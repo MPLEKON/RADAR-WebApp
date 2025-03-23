@@ -3,73 +3,74 @@ import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.m
 let scene, camera, renderer;
 let spheresGroup = null;
 console.log("🚀 three_scene.js is loaded!");
-export function initThreeScene(containerId = 'three-container') {
+export function initThreeScene() {
     console.log("🛠 Initializing Three.js Scene...");
-    
-    const container = document.getElementById(containerId);
-    if (!container) {
-        console.error("❌ ERROR: No container found for Three.js!");
-        return;
-    }
-
     scene = new THREE.Scene();
-    camera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000);
-    camera.position.set(0, 0, 100); // Move the camera back
+
+    // 🔥 Move the camera back so objects are visible
+    camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    camera.position.set(0, 100, 500);  // 🔥 Move camera up and back
     console.log("📷 Camera positioned at:", camera.position);
 
     renderer = new THREE.WebGLRenderer({ antialias: true });
-    renderer.setSize(container.clientWidth, container.clientHeight);
-    container.innerHTML = ''; // Clear old canvas
-    container.appendChild(renderer.domElement);
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    document.body.appendChild(renderer.domElement);
 
-    const testCube = new THREE.Mesh(
-        new THREE.BoxGeometry(10, 10, 10),
-        new THREE.MeshStandardMaterial({ color: 0x00ff00 })
-    );
-    scene.add(testCube);
-    console.log("🟩 Added test cube at (0,0,0)");
-    
-    
-    // Add ambient and point lights
-    scene.add(new THREE.AmbientLight(0xffffff, 1.0)); // Increase brightness
-    const pointLight = new THREE.PointLight(0xffffff, 2);
-    pointLight.position.set(20, 20, 20);
+    // ✅ Ambient Light (General Scene Light)
+    const ambientLight = new THREE.AmbientLight(0xffffff, 1.5);  // 🔥 Increase brightness
+    scene.add(ambientLight);
+
+    // ✅ Directional Light (Simulates the Sun)
+    const dirLight = new THREE.DirectionalLight(0xffffff, 2);
+    dirLight.position.set(100, 100, 100);
+    scene.add(dirLight);
+
+    // ✅ Point Light (Bright Local Light)
+    const pointLight = new THREE.PointLight(0xffffff, 2, 500);
+    pointLight.position.set(0, 100, 200);
     scene.add(pointLight);
 
-    console.log("✅ Three.js Scene Initialized!");
+    console.log("💡 Lighting added: Ambient, Directional, and Point Light");
+
+    function animate() {
+        requestAnimationFrame(animate);
+        renderer.render(scene, camera);
+    }
     animate();
-}
 
-
-function animate() {
-  requestAnimationFrame(animate);
-  scene.rotation.y += 0.0015;
-  renderer.render(scene, camera);
+    // ✅ Expose variables globally for debugging
+    window.scene = scene;
+    window.camera = camera;
+    window.renderer = renderer;
 }
 
 function createSphere(pt) {
-    const geometry = new THREE.SphereGeometry(2, 16, 16);  // 🔴 Larger spheres
-    const color = new THREE.Color(0xff0000);  // 🔴 Red for visibility
-    const material = new THREE.MeshStandardMaterial({ color, metalness: 0.2, roughness: 0.5 });
+    const geometry = new THREE.SphereGeometry(2, 16, 16); // 🔴 Larger spheres
+    const material = new THREE.MeshStandardMaterial({ color: 0xff0000 }); // 🔴 Red color
 
     const sphere = new THREE.Mesh(geometry, material);
-    sphere.position.set(pt.x * 10, pt.y * 10, pt.z * 10);  // 🔥 Scale up positions
+    sphere.position.set(pt.x, pt.y, pt.z);  // 🔥 Scale up positions
+
+    console.log("✅ Created sphere at:", sphere.position);
     return sphere;
 }
 
 
+
 export function renderAllFrames(data) {
-    clearPrevious();
+    clearPrevious();  // Ensure old objects are removed
     spheresGroup = new THREE.Group();
 
     console.log("🔄 Rendering 3D Data:", data);
     let frameCount = 0;
     let sphereCount = 0;
 
-    data.forEach(frame => {
+    data.forEach((frame, frameIndex) => {
         frameCount++;
+        console.log(`📌 Processing Frame ${frameIndex + 1}, Objects: ${frame.points.length}`);
+
         frame.points.forEach(pt => {
-            console.log(`🟢 Attempting to place sphere in Frame ${frameCount} at:`, pt.x, pt.y, pt.z);
+            console.log(`🟢 Attempting to place sphere at:`, pt.x, pt.y, pt.z);
             if (!isNaN(pt.x) && !isNaN(pt.y) && !isNaN(pt.z)) {
                 const sphere = createSphere(pt);
                 spheresGroup.add(sphere);
@@ -83,6 +84,8 @@ export function renderAllFrames(data) {
     console.log(`🎯 Total spheres added: ${sphereCount}`);
     scene.add(spheresGroup);
 }
+
+
 
 
 
