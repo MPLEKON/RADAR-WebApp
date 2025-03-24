@@ -1,5 +1,15 @@
 # Web-Based 3D Radar Visualization
 
+📁 **Project Versions**
+> Click a version below to launch the live visualizer:
+
+- [v0_mar_19_25](https://MPLEKON.github.io/RADAR-WebApp/v0_mar_19_25/v0_mar_19_25_giannis_index.html)
+- [v1](https://MPLEKON.github.io/RADAR-WebApp/v1/v1_marc_20_25.html)
+- [v2](https://MPLEKON.github.io/RADAR-WebApp/v2/v2_marc_21_25.html)
+- [v3](https://MPLEKON.github.io/RADAR-WebApp/v3/v3_all_files/v3_marc_24_25.html)
+
+---
+
 Welcome to the **Web-Based 3D Radar Visualization** project! This repository provides an easy-to-use web application that plots radar-detected points in 2D or 3D. It is designed to help you quickly visualize and analyze radar data from FMCW radars.
 
 ## Overview
@@ -9,8 +19,15 @@ This project allows you to:
 - Parse CSV files containing radar data with PapaParse.
 - Switch between real-time and static data representations.
 - Adjust chart scales dynamically based on the data's global extremes.
-- Cluster points using DBSCAN for density-based spatial analysis (via [mljs/dbscan](https://github.com/mljs/dbscan)).
+- Cluster points using DBSCAN for density-based spatial analysis.
 - Toggle dark mode for a better viewing experience.
+- 
+## Versions
+This project has multiple versions:
+- **v0**: Initial test version — converts CSV data to JSON and plots using Chart.js.
+- **v1**: A simplified and cleaner version of v0.
+- **v2**: Supports loading JavaScript files that contain the raw CSV as a string.
+- **v3**: The most impactful version — loads CSV files in the format described below, and performs clustering using DBSCAN on buffered data (20 frames) for smoothing.
 
 ## CSV File Format
 
@@ -55,6 +72,10 @@ A demo CSV file is provided for testing, or you can upload your own.
 
 This project is a collaborative effort between the **University of West Attica (UniWA)** and the **Norwegian University of Science and Technology (NTNU)**.
 
+**Contributors:**  
+- Ioannis Christopoulos (UniWA)  [LinkedIn](https://www.linkedin.com/in/ioannis-christopoulos-3abab6227/)
+- Fotios Papadopoulos (UniWA) [LinkedIn](https://www.linkedin.com/in/fotios-papadopoulos-22722b299/)
+
 **Supervisors:**  
 - Henrique M. Gaspar (NTNU)  
 - Stelios Mitilineos (UniWA)
@@ -66,5 +87,3 @@ To run this project locally:
 1. **Clone the repository:**
    ```bash
    git clone https://github.com/MPLEKON/RADAR-WebApp.git
-2. **Open index.html in your browser.**
-    No additional installation is required since this is a web-based application.

@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>Radar Visualizer Versions</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <style>
+        body {
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            color: #f0f0f0;
+            min-height: 100vh;
+        }
+
+        h1 {
+            font-size: 3rem;
+            margin-bottom: 2rem;
+        }
+
+        .btn-version,
+        .btn-doc {
+            padding: 12px 20px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            border: none;
+            border-radius: 12px;
+            transition: transform 0.2s, box-shadow 0.3s;
+            color: #fff;
+        }
+
+        .btn-version:hover,
+        .btn-doc:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 12px rgba(255, 255, 255, 0.3);
+            color: #111;
+        }
+
+        .btn-doc {
+            background: linear-gradient(to right, #7f00ff, #e100ff);
+        }
+
+        .dropdown-menu {
+            background-color: #2d2d44;
+            border: none;
+        }
+
+        .dropdown-item {
+            color: #fff;
+            font-weight: 500;
+        }
+
+        .dropdown-item:hover {
+            background-color: #00d1b2;
+            color: #111;
+        }
+
+        footer {
+            margin-top: 60px;
+            font-size: 0.95rem;
+            color: #ccc;
+        }
+
+        .footer-section {
+            margin-top: 1.5rem;
+            font-size: 0.9rem;
+            color: #aaa;
+        }
+
+        #kp-index {
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container text-center py-5">
+        <h1>Radar Visualizer</h1>
+
+        <div class="d-flex flex-column flex-md-row justify-content-center gap-3 mb-5">
+            <div class="dropdown">
+                <button class="btn btn-version v2 dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                    Versions
+                </button>
+                <ul class="dropdown-menu text-center">
+                    <li><a class="dropdown-item" href="./v0_mar_19_25/v0_mar_19_25_giannis_index.html">v0</a></li>
+                    <li><a class="dropdown-item" href="./v1/v1_marc_20_25.html">v1</a></li>
+                    <li><a class="dropdown-item" href="./v2/v2_marc_21_25.html">v2</a></li>
+                    <li><a class="dropdown-item" href="./v3/v3_all_files/v3_marc_24_25.html">v3</a></li>
+                </ul>
+            </div>
+
+        <a href="https://github.com/MPLEKON/RADAR-WebApp#readme" target="_blank" class="btn btn-doc">
+            Documentation
+        </a>
+    </div>
+
+        <footer class="mt-5">
+            <div class="footer-section" id="weather">
+                🌤️ Ålesund: <span id="alesund-weather">Loading...</span> |
+                🌞 Athens: <span id="athens-weather">Loading...</span>
+            </div>
+
+            <div class="footer-section" id="aurora">
+                Aurora Forecast:
+                <div>Global KP Index: <span id="kp-index">Loading...</span></div>
+                <div>🌌 Ålesund: <span id="alesund-aurora">Loading...</span></div>
+                <div>🌌 Athens: <span id="athens-aurora">Loading...</span></div>
+            </div>
+
+                <div class="footer-section mt-4">
+                NTNU & UNIWA Collaboration Project
+            </div>
+        </footer>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+
+        const API_KEY = '695fe7448851e8645cda86b6c8579b57'; 
+
+        const locations = [
+        { name: 'Alesund', id: 'alesund-weather', city: 'Alesund', country: 'NO' },
+        { name: 'Athens', id: 'athens-weather', city: 'Athens', country: 'GR' }
+        ];
+
+        locations.forEach(loc => {
+        fetch(`https://api.openweathermap.org/data/2.5/weather?q=${loc.city},${loc.country}&units=metric&appid=${API_KEY}`)
+            .then(response => response.json())
+            .then(data => {
+            const temp = Math.round(data.main.temp);
+            const description = data.weather[0].description;
+            document.getElementById(loc.id).textContent = `${temp}°C, ${description}`;
+            })
+            .catch(err => {
+            console.error("Weather API error for", loc.name, err);
+            document.getElementById(loc.id).textContent = 'N/A';
+            });
+        });
+
+  
+        fetch('https://services.swpc.noaa.gov/json/planetary_k_index_1m.json')
+        .then(res => res.json())
+        .then(data => {
+            const latest = data[data.length - 1];
+            const kp = latest.kp_index;
+            document.getElementById('kp-index').textContent = `KP ${kp}`;
+
+            let alesundMsg = '';
+            if (kp >= 7) alesundMsg = 'High chance of aurora!';
+            else if (kp >= 5) alesundMsg = 'Possible visibility in Ålesund';
+            else if (kp >= 4) alesundMsg = 'Unlikely but possible with clear skies';
+            else alesundMsg = 'Not visible';
+
+            let athensMsg = kp >= 9 ? 'Only during extreme geomagnetic storms' : 'Not visible';
+
+            document.getElementById('alesund-aurora').textContent = alesundMsg;
+            document.getElementById('athens-aurora').textContent = athensMsg;
+        })
+        .catch(err => {
+            console.error('Aurora API error:', err);
+            document.getElementById('kp-index').textContent = 'N/A';
+            document.getElementById('alesund-aurora').textContent = 'N/A';
+            document.getElementById('athens-aurora').textContent = 'N/A';
+        });
+    </script>
+</body>
+</html>

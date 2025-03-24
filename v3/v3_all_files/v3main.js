@@ -1,15 +1,15 @@
 import { parseCSV } from './v3_csv_giannis.js';
 import {
     setupChart,
-    computeGlobalExtremes,
     updateChartScales,
     mapStaticData,
     startRealTime,
     updateFrameCounter,
-    setPlaybackPaused,
-    stopRealTime
-} from './chartManager.js';
-
+    computeGlobalExtremes,
+    stopRealTime,
+    setPlaybackPaused
+  } from './chartManager.js';
+  
 //import { runDBSCANOnFrame } from './clustering.js';
 
 
@@ -69,7 +69,7 @@ document.getElementById('csvFileInput').addEventListener('change', async (event)
 
             if (selectedValue) {
                 updateChartScales(selectedValue , parsedData);
-                if (realtime) startRealTime(parsedData, selectedValue, 50, paused);
+                if (realtime) startRealTime(parsedData, selectedValue, 50);
                 else mapStaticData(selectedValue, parsedData);
             }
 
@@ -94,7 +94,7 @@ function setupEventHandlers() {
             selectedValue = this.getAttribute('data-chart');
             updateChartScales(selectedValue, parsedData);
             if (realtime) {
-                startRealTime(parsedData, selectedValue, 50, paused);
+                startRealTime(parsedData, selectedValue, 50);
             } else {
                 mapStaticData(selectedValue);
             }
@@ -107,6 +107,7 @@ function setupEventHandlers() {
             setPlaybackPaused(false);
             startRealTime(parsedData, selectedValue, 50);
         } else {
+            realtime = false
             stopRealTime();
             mapStaticData(selectedValue , parsedData);
         }
