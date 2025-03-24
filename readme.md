@@ -65,6 +65,10 @@ A demo CSV file is provided for testing, or you can upload your own.
 
 This project is a collaborative effort between the **University of West Attica (UniWA)** and the **Norwegian University of Science and Technology (NTNU)**.
 
+**Contributors:**  
+- Ioannis Christopoulos (UniWA)  ([LinkedIn](https://www.linkedin.com/in/ioannis-christopoulos-3abab6227/))
+- Fotios Papadopoulos (UniWA) ([LinkedIn]([https://www.linkedin.com/in/ioannis-christopoulos-3abab6227/](https://www.linkedin.com/in/fotios-papadopoulos-22722b299/)))
+
 **Supervisors:**  
 - Henrique M. Gaspar (NTNU)  
 - Stelios Mitilineos (UniWA)
