@@ -21,6 +21,13 @@ This project allows you to:
 - Adjust chart scales dynamically based on the data's global extremes.
 - Cluster points using DBSCAN for density-based spatial analysis.
 - Toggle dark mode for a better viewing experience.
+- 
+## Versions
+This project has multiple versions:
+- **v0**: Initial test version — converts CSV data to JSON and plots using Chart.js.
+- **v1**: A simplified and cleaner version of v0.
+- **v2**: Supports loading JavaScript files that contain the raw CSV as a string.
+- **v3**: The most impactful version — loads CSV files in the format described below, and performs clustering using DBSCAN on buffered data (20 frames) for smoothing.
 
 ## CSV File Format
 
