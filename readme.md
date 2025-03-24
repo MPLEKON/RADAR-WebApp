@@ -19,7 +19,7 @@ This project allows you to:
 - Parse CSV files containing radar data with PapaParse.
 - Switch between real-time and static data representations.
 - Adjust chart scales dynamically based on the data's global extremes.
-- Cluster points using DBSCAN for density-based spatial analysis (via [mljs/dbscan](https://github.com/mljs/dbscan)).
+- Cluster points using DBSCAN for density-based spatial analysis.
 - Toggle dark mode for a better viewing experience.
 
 ## CSV File Format
