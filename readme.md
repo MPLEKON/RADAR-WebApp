@@ -67,7 +67,7 @@ This project is a collaborative effort between the **University of West Attica (
 
 **Contributors:**  
 - Ioannis Christopoulos (UniWA)  ([LinkedIn](https://www.linkedin.com/in/ioannis-christopoulos-3abab6227/))
-- Fotios Papadopoulos (UniWA) ([LinkedIn](https://www.linkedin.com/in/ioannis-christopoulos-3abab6227/](https://www.linkedin.com/in/fotios-papadopoulos-22722b299/))
+- Fotios Papadopoulos (UniWA) ([LinkedIn](https://www.linkedin.com/in/ioannis-christopoulos-3abab6227/](https://www.linkedin.com/in/fotios-papadopoulos-22722b299/)))
 
 **Supervisors:**  
 - Henrique M. Gaspar (NTNU)  
