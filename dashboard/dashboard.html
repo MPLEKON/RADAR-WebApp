@@ -52,9 +52,13 @@
             <!-- Main content below -->
             <div class="row flex-grow-1">
                 <div class="col">
-                <div class="section h-100 d-flex justify-content-center align-items-center bg-white rounded">
-                    <img src="giphy.gif" alt="3D placeholder" class="img-fluid" style="max-height: 100%; max-width: 100%;">
-                </div>
+                    <div class="section h-100 p-2 d-flex flex-column bg-white rounded">
+                        <h5 class="text-center mb-2">3D View</h5>
+                        <div class="flex-grow-1 d-flex justify-content-center align-items-center">
+                            <img src="giphy.gif" alt="3D animation" class="img-fluid" style="max-height: 100%; max-width: 100%;">
+                        </div>
+                    </div>
+
                 </div>
             </div>
         </div>
@@ -94,16 +98,30 @@
             </ul>
             <hr class="bg-light">
             <h6>About:</h6>
-            <p class="small mb-1">Contributors:<br>Fotios Papadopoulos<br>Ioannis Christopoulos</p>
-            <p class="small">Supervisors:<br>Henrique M. Gaspar<br>Stylianos A. Mytilinaios</p>
-            <a href="#" class="btn btn-sm btn-outline-light w-100">Documentation</a>
-            <button class="btn btn-outline-light w-100">Small Description</button>
+            <p class="small mb-1">
+                <strong>Contributors:</strong><br>
+                <a href="https://www.linkedin.com/in/fotios-papadopoulos-22722b299/" target="_blank" class="link-light text-decoration-underline">Fotios Papadopoulos</a><br>
+                <a href="https://www.linkedin.com/in/ioannis-christopoulos-3abab6227/" target="_blank" class="link-light text-decoration-underline">Ioannis Christopoulos</a>
+            </p>
+            <p class="small">
+                <strong>Supervisors:</strong><br>
+                <a href="https://www.ntnu.edu/employees/henrique.gaspar" target="_blank" class="link-light text-decoration-underline">Henrique M. Gaspar</a><br>
+                <a href="https://eee.uniwa.gr/en/39-bio/809-mitilineos-bio-en" target="_blank" class="link-light text-decoration-underline">Stylianos A. Mytilinaios</a>
+            </p>
+            <a href="https://github.com/MPLEKON/RADAR-WebApp/blob/main/readme.md"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="btn btn-sm btn-outline-light w-100 mb-2">
+                Documentation
+            </a>
+            <div class="form-control bg-dark text-white small" style="height: 100px; overflow-y: auto;">
+                This is a short description of the ship's approach, real-time plot behavior, or any note you want to display here.
+            </div>
+            <hr class="bg-light">
+            <div class="text-warning text-center small mt-2">
+            CPA ➝ <strong id="cluster-distance">12.7m</strong>
             </div>
 
-            <!-- Bottom info -->
-            <div class="distance-box mt-3">
-            Distance to closest obstacle:<br>43.4m
-            </div>
         </div>
         </div>
     </div>
