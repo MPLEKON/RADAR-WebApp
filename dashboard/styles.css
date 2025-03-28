@@ -1,0 +1,48 @@
+html, body {
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+}
+
+.full-height {
+  height: 100vh;
+}
+
+.top-row {
+  height: 30vh;
+}
+
+.bottom-row {
+  height: 70vh;
+}
+
+.info-sidebar {
+  background-color: #444;
+  color: white;
+  padding: 20px;
+  border-radius: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.distance-box {
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: #00f;
+}
+
+.section-title {
+  font-size: 0.95rem;
+  text-align: center;
+  margin-bottom: 5px;
+  font-weight: bold;
+}
+
+iframe,
+canvas {
+  width: 100%;
+  height: 100%;
+  border-radius: 6px;
+}

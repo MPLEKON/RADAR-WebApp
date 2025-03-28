@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard with Info Column</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container-fluid">
+    <div class="row full-height">
+        <!-- Left section -->
+        <div class="col-md-9 d-flex flex-column">
+            <!-- Top row (not full width) -->
+            <!-- Top row broken into 3 columns -->
+            <div class="row mb-2" style="height: 30vh;">
+                <!-- Column 1: Map -->
+                <div class="col-md-4">
+                <div class="section h-100 p-2 d-flex flex-column">
+                    <h6 class="text-center mb-1">Map</h6>
+                    <div class="flex-grow-1">
+                    <iframe
+                        src="https://www.openstreetmap.org/export/embed.html?bbox=27.2891,36.8952,27.2931,36.8992&layer=mapnik&marker=36.8972,27.2911"
+                        style="width: 100%; height: 100%; border: none; border-radius: 6px;">
+                    </iframe>
+                    </div>
+                </div>
+                </div>
+            
+                <!-- Column 2: Plot 1 -->
+                <div class="col-md-4">
+                <div class="section h-100 p-2 d-flex flex-column">
+                    <h6 class="text-center mb-1">2D Plot: Y vs Z</h6>
+                    <div class="flex-grow-1">
+                    <canvas id="plot1"></canvas>
+                    </div>
+                </div>
+                </div>
+            
+                <!-- Column 3: Plot 2 -->
+                <div class="col-md-4">
+                <div class="section h-100 p-2 d-flex flex-column">
+                    <h6 class="text-center mb-1">2D Plot: X vs Y</h6>
+                    <div class="flex-grow-1">
+                    <canvas id="plot2"></canvas>
+                    </div>
+                </div>
+                </div>
+            </div>
+            
+            <!-- Main content below -->
+            <div class="row flex-grow-1">
+                <div class="col">
+                <div class="section h-100 d-flex justify-content-center align-items-center bg-white rounded">
+                    <img src="giphy.gif" alt="3D placeholder" class="img-fluid" style="max-height: 100%; max-width: 100%;">
+                </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right info column -->
+        <div class="col-md-3">
+            <div class="info-sidebar">
+                <div>
+                    <h5>Input Data:</h5>
+                    <ul class="list-unstyled small">
+                        <li class="mb-2">
+                        <strong>Files:</strong>
+                            <div class="d-flex gap-2 mt-1">
+                            <!-- Toggle Button -->
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="checkboxKos">
+                                    <label class="form-check-label" for="checkboxKos">Kos Arrival</label>
+                                </div>
+                                <input type="file" class="form-control form-control-sm" style="max-width: 150px;">
+                            </div>
+                        </li>
+                        <li><strong>Port:</strong> <a href="https://www.openstreetmap.org/?mlat=36.8972&mlon=27.2911&zoom=15" 
+                            target="_blank" rel="noopener noreferrer">Kos</a></li>
+                        <li><strong>Coordinates:</strong><br>36°53'50"N<br>27°17'28"E</li>
+                        <li><strong>Arrival:</strong> 05:40:10</li>
+                        <li class="mb-3">
+                            <strong>Progress:</strong>
+                            <div class="d-flex justify-content-between small">
+                                <span class="text-success">05:40</span>
+                                <span class="text-warning">25:12 left</span>
+                            </div>
+                            <div class="progress" style="height: 5px;">
+                                <div class="progress-bar bg-success" role="progressbar" style="width: 18%;">
+                                </div>
+                </div>
+                        </li>
+            </ul>
+            <hr class="bg-light">
+            <h6>About:</h6>
+            <p class="small mb-1">Contributors:<br>Fotios Papadopoulos<br>Ioannis Christopoulos</p>
+            <p class="small">Supervisors:<br>Henrique M. Gaspar<br>Stylianos A. Mytilinaios</p>
+            <a href="#" class="btn btn-sm btn-outline-light w-100">Documentation</a>
+            <button class="btn btn-outline-light w-100">Small Description</button>
+            </div>
+
+            <!-- Bottom info -->
+            <div class="distance-box mt-3">
+            Distance to closest obstacle:<br>43.4m
+            </div>
+        </div>
+        </div>
+    </div>
+    </div>
+    <script src="chart_test.js"></script>
+
+</body>
+</html>
