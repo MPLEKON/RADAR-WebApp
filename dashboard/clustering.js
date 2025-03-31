@@ -91,3 +91,34 @@ export function getBoundingBoxes(points) {
     return boundingBoxes;
 }
 
+export function getClusterCentroids(points) {
+    const clusters = new Map();
+
+    for (const p of points) {
+        if (p.clusterId === -1) continue; // skip noise
+        if (!clusters.has(p.clusterId)) clusters.set(p.clusterId, []);
+        clusters.get(p.clusterId).push(p);
+    }
+
+    const centroids = [];
+
+    for (const [clusterId, clusterPoints] of clusters.entries()) {
+        const sum = clusterPoints.reduce((acc, p) => ({
+            x: acc.x + p.x,
+            y: acc.y + p.y,
+            z: acc.z + p.z
+        }), { x: 0, y: 0, z: 0 });
+
+        const count = clusterPoints.length;
+        centroids.push({
+            clusterId,
+            x: sum.x / count,
+            y: sum.y / count,
+            z: sum.z / count
+        });
+    }
+
+    return centroids;
+}
+
+

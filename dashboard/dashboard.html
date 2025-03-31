@@ -88,15 +88,13 @@
                         <li class="mb-3">
                             <strong>Progress:</strong>
                             <div class="d-flex justify-content-between small">
-                                <span class="text-success" id="elapsedTime">05:40</span>
-                                <span class="text-warning" id="totalDuration">25:12 left</span>
+                              <span class="text-success" id="elapsedTime">00:00</span>
+                              <span class="text-warning" id="totalDuration">00:00</span>
                             </div>
                             <div class="progress" style="height: 5px;">
-                                <div class="progress-bar bg-success" id="frameProgress" role="progressbar" style="width: 18%;">
-                                </div>
-                                </div>
-                </div>
-                        </li>
+                              <div class="progress-bar bg-success" id="frameProgress" role="progressbar" style="width: 0%;"></div>
+                            </div>
+                          </li>
             </ul>
             <hr class="bg-light">
             <h6>About:</h6>
@@ -117,7 +115,9 @@
                 Documentation
             </a>
             <div class="form-control bg-dark text-white small" style="height: 100px; overflow-y: auto;">
-                This is a short description of the ship's approach, real-time plot behavior, or any note you want to display here.
+                This project, a collaboration between UniWA and NTNU, visualizes real radar data from FMCW sensors mounted on a Ro-Ro passenger ship.<br>
+                The goal is to enhance docking precision by tracking backscattered signals during berthing.<br><br>
+                Radar operates at 20 FPS within a 50m range, detecting objects with 3D position, radial velocity (m/s), and SNR (dB).
             </div>
             <hr class="bg-light">
             <div class="text-warning text-center small mt-2">

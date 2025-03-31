@@ -1,7 +1,7 @@
 import { parseCSV } from './csv_parser.js';
 /* other imports*/
 import { setupCharts, updateCharts, computeGlobalExtremes, setBoundingBoxes } from './chartManager.js';
-import { runDBSCAN, getBoundingBoxes } from './clustering.js';
+import { runDBSCAN, getBoundingBoxes, getClusterCentroids } from './clustering.js';
 
 let parsedData =[];
 let currentFrame = 0;
@@ -76,6 +76,16 @@ function startRealTimeLoop() {
         
 
         updateCharts(cleanPoints);
+
+        const centroids = getClusterCentroids(cleanPoints);
+        console.log("Cluster centroids:", centroids);
+        if (centroids.length > 0) {
+            const closest = centroids.reduce((min, c) => (c.y < min.y ? c : min), centroids[0]);
+            const cpaValue = Math.abs(closest.y).toFixed(1); // optional abs() if Y can be negative
+            document.getElementById("cluster-distance").textContent = `${cpaValue}m`;
+        } else {
+            document.getElementById("cluster-distance").textContent = "—";
+        }
         setBoundingBoxes(chart1Boxes, chart2Boxes);
 
         // 📊 Update progress bar and time display
