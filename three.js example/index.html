@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Three.js Slider Example</title>
+    <style>
+      body { margin: 0; }
+      #sliderContainer {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        z-index: 1;
+        background: rgba(255, 255, 255, 0.8);
+        padding: 10px;
+        border-radius: 4px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="sliderContainer">
+      <label for="cubeXSlider">Cube X Position:</label>
+      <input type="range" id="cubeXSlider" min="-10" max="10" step="0.1" value="0">
+    </div>
+    <script type="module" src="./main.js"></script>
+  </body>
+</html>
