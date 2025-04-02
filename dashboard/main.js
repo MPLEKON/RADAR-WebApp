@@ -1,7 +1,7 @@
 import { parseCSV } from './csv_parser.js';
-/* other imports*/
 import { setupCharts, updateCharts, computeGlobalExtremes, setBoundingBoxes } from './chartManager.js';
 import { runDBSCAN, getBoundingBoxes, getClusterCentroids } from './clustering.js';
+import { init3DScene, renderBufferedFrames } from './threeScene.js';
 
 let parsedData =[];
 let currentFrame = 0;
@@ -19,8 +19,10 @@ window.addEventListener("DOMContentLoaded", async () => {
     parsedData = await parseCSV(rawCSV); 
     console.log("parsedData length:", parsedData.length);
     await computeGlobalExtremes(parsedData);
-    setupCharts();
-    startRealTimeLoop();
+    await setupCharts();
+    await init3DScene();
+    //renderAllPoints(parsedData);
+    startRealTimeLoop()
 });
 
 function getColor(clusterId) {
@@ -76,6 +78,7 @@ function startRealTimeLoop() {
         
 
         updateCharts(cleanPoints);
+        renderBufferedFrames(frameBuffer.map(points => ({ points })));
 
         const centroids = getClusterCentroids(cleanPoints);
         console.log("Cluster centroids:", centroids);
