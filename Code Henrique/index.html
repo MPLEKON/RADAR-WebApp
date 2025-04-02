@@ -7,28 +7,48 @@
         <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
         <script src="three.min.js"></script>        
         <script src="OrbitControls.js"></script>
+        <script src="csv_parser.js"></script>
     </head>
     <body>
         <div id="info">
 		<h1> - Simple WebGL Radar Sphere Plot</h1>
 		<p>Cooperation NTNU / UNIWA - 2025 - By......
-<p>EXPLANATION: 3D Rendering ...</p>
+        <p>EXPLANATION: 3D Rendering ...</p>
 
-            <div id="canvas" style="width:1000px;"></div>
+            <div id="canvas" ></div>
+
+        <script type="module">
+            import { parseCSV } from './csv_parser.js';
+            
+            async function loadAndParseCSV() {
+                try {
+                const response = await fetch('./Super_short_detected_objects.csv');
+                const rawCSV = await response.text();
+            
+                window.parsedData = await parseCSV(rawCSV);
+                console.log("Parsed Data:", parsedData);
+                } catch (err) {
+                console.error("Error loading/parsing CSV:", err);
+                }
+            }
+            await loadAndParseCSV();
+            threedim();
+            
+        </script>
 
         <script>
-            
-            npoints = 25
+            function threedim(){
+                //npoints = 25
 
             //Constructing a Scene
             const scene = new THREE.Scene();
             scene.background = new THREE.Color(0xffffff);
-            const size = 25000;
+            const size = 250;
             const divisions = 10;
             const gridHelper = new THREE.GridHelper( size, divisions );
             scene.add( gridHelper );
 
-            //Adding Sphere            
+            //Adding Plane            
             var geo = new THREE.PlaneBufferGeometry(25000, 10000, 8, 8);
             var mat = new THREE.MeshBasicMaterial({ color: 0x00ffff, side: THREE.DoubleSide, opacity: 0.5,transparent: true, });
             
@@ -39,10 +59,23 @@
 
             //Adding Sphere    
             //make for loop
-            const sgeometry = new THREE.SphereGeometry( 150, 320, 160 ); 
-            const smaterial = new THREE.MeshBasicMaterial( { color: 0xffff00 } ); 
-            const sphere = new THREE.Mesh( sgeometry, smaterial ); scene.add( sphere )
+            const geometry = new THREE.SphereGeometry( 0.5, 32, 16 ); 
+            const material = new THREE.MeshBasicMaterial( { color: 0xffff00 } ); 
 
+            
+            //const sphere = new THREE.Mesh( geometry, material ); scene.add( sphere )
+            
+            for (let i = 0; i <parsedData.length; i++) {
+                const frame = parsedData[i]
+                for (let j =0; j<frame.detectedObjectsNum; j++){
+                    const point = frame.points[j];
+                    const sphere = new THREE.Mesh(geometry, material);
+                    sphere.position.set(point.z, point.y, point.x);
+                    console.log(point.x);
+                    scene.add(sphere);
+                    console.log("added sphere");
+                }
+            } 
             
             //Constructing a Camera
             width = window.innerWidth;
@@ -61,9 +94,7 @@
 
             //Creating a container in a div
             var container = document.getElementById( 'canvas' );
-          
 
-          
             //Rendering the Scene
             var renderer = new THREE.WebGLRenderer({antialias: true});
             container.appendChild( renderer.domElement );
@@ -81,6 +112,8 @@
             
             render();
             
+            
+            }
             
         </script>
     </body>
