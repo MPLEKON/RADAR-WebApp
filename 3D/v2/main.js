@@ -7,10 +7,14 @@ let parsedData = [];
 let mode = "static";
 let frameIndex = 0;
 let spheres = [];
+let playbackTimer = null;
+let isPaused = false;
 
 document.addEventListener('DOMContentLoaded', async () => {
     const container = document.getElementById("canvas");
     const toggle = document.getElementById("modeToggle");
+    const startBtn = document.getElementById("startBtn");
+    const pauseBtn = document.getElementById("pauseBtn");
 
     await loadAndParseCSV();
 
@@ -33,6 +37,22 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     animate(); // Start the shared render loop
+
+    startBtn.addEventListener("click", () => {
+        if (mode === "realtime") {
+            console.log("Resuming playback...");
+            isPaused = false;
+            plotNextBatch();
+        }
+    });
+
+    pauseBtn.addEventListener("click", () => {
+        if (mode === "realtime") {
+            console.log("Pausing playback...");
+            isPaused = true;
+            if (playbackTimer) clearTimeout(playbackTimer);
+        }
+    });
 });
 
 async function loadAndParseCSV() {
@@ -130,7 +150,7 @@ function startPlayback() {
 }
 
 function plotNextBatch() {
-    if (mode !== "realtime") return;
+    if (mode !== "realtime" || isPaused) return;
 
     clearSpheres();
 
