@@ -171,7 +171,7 @@ function plotNextBatch() {
     frameIndex += 1;
 
     if (frameIndex < parsedData.length) {
-        setTimeout(plotNextBatch, 100); // 10 FPS
+        setTimeout(plotNextBatch, 50); // 10 FPS
     } else {
         console.log("Playback finished");
     }
