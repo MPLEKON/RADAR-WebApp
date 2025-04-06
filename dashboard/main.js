@@ -12,9 +12,9 @@ const colorMap = {};
 
 
 window.addEventListener("DOMContentLoaded", async () => {
-    const response = await fetch('./Super_short_detected_objects.csv');
+    const response = await fetch('./Symi_radar_gps_sync_filtered.csv');
     const rawCSV = await response.text();
-    console.log(rawCSV);
+    //console.log(rawCSV);
     console.log("Loaded preloaded CSV file content:", rawCSV);
     parsedData = await parseCSV(rawCSV); 
     console.log("parsedData length:", parsedData.length);
@@ -42,17 +42,17 @@ function startRealTimeLoop() {
 
     setInterval(() => {
         const frame = parsedData[currentFrame];
-        console.log(frame)
+        //console.log(frame)
         //if (!frame || !frame.points) return;
 
 
         frameBuffer.push(frame.points);
-        console.log("frameBuffer",frameBuffer)
+        //console.log("frameBuffer",frameBuffer)
         if (frameBuffer.length > BUFFER_SIZE) frameBuffer.shift();
 
 
         const bufferedPoints = frameBuffer.flat();
-        console.log("bufferdPoints",bufferedPoints)
+        //console.log("bufferdPoints",bufferedPoints)
         const cleanPoints = bufferedPoints.filter(p => p && !isNaN(p.x) && !isNaN(p.y) && !isNaN(p.z));
         
         const input = cleanPoints.map(p => [p.x, p.y, p.z]);
@@ -83,7 +83,7 @@ function startRealTimeLoop() {
         renderBufferedFrames(frameBuffer.map(points => ({ points })));
 
         const centroids = getClusterCentroids(cleanPoints);
-        console.log("Cluster centroids:", centroids);
+        //console.log("Cluster centroids:", centroids);
         if (centroids.length > 0) {
             const closest = centroids.reduce((min, c) => (c.y < min.y ? c : min), centroids[0]);
             const cpaValue = Math.abs(closest.y).toFixed(1); // optional abs() if Y can be negative
