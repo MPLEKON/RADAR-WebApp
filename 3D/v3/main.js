@@ -83,7 +83,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 async function loadAndParseCSV() {
     try {
-        const response = await fetch('./Symi_radar_gps_sync.csv');
+        const response = await fetch('./Symi_radar_gps_sync_filtered.csv');
         const rawCSV = await response.text();
         parsedData = await parseCSV(rawCSV);
         console.log("Parsed Data:", parsedData);
@@ -257,7 +257,7 @@ function setCameraMode(mode) {
             break;
         case "side":
             camera.position.set(50, 9, 0);
-            camera.lookAt(0, 0, 0);
+            controls.target.set(0,9,0);
             break;
         case "top":
             camera.position.set(0, 70, 30);
