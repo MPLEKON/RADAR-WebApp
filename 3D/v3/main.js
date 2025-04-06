@@ -262,7 +262,10 @@ function setCameraMode(mode) {
         case "top":
             camera.position.set(0, 70, 30);
             camera.rotation.set(0,0,0)
-            camera.lookAt(0, 0, 0);
+            //camera.lookAt(0, 0, 0);
+            controls.target.set(0, 0, 30);                 // Looking at the center
+            controls.update();
+            camera.rotation.y = 3.14;
             break;
     }
     controls.update();
