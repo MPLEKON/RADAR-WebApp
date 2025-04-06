@@ -12,6 +12,7 @@ let playbackTimer = null;
 let isPaused = false;
 let boundingBoxes = [];
 
+
 document.addEventListener('DOMContentLoaded', async () => {
     const container = document.getElementById("canvas");
     const toggle = document.getElementById("modeToggle");
@@ -32,9 +33,16 @@ document.addEventListener('DOMContentLoaded', async () => {
             });
         }
     });
-
-window.yRange = { min: yMin, max: yMax }; // make it globally accessible
-console.log("Y range:", yMin, yMax);
+    //Listener for the camera selection buttons
+    document.querySelectorAll("#cameraButtons button").forEach(button => {
+        button.addEventListener("click", () => {
+            const mode = button.getAttribute("data-mode");
+            setCameraMode(mode);
+        });
+    });
+    
+    window.yRange = { min: yMin, max: yMax }; 
+    console.log("Y range:", yMin, yMax);
 
     ({ scene, camera, renderer, controls } = createScene(container));
     window.camera = camera; // for manual debugging
@@ -54,7 +62,7 @@ console.log("Y range:", yMin, yMax);
         }
     });
 
-    animate(); // Start the shared render loop
+    animate(); // Start the common render loop
 
     startBtn.addEventListener("click", () => {
         if (mode === "realtime") {
@@ -75,7 +83,7 @@ console.log("Y range:", yMin, yMax);
 
 async function loadAndParseCSV() {
     try {
-        const response = await fetch('./clean_approach.csv');
+        const response = await fetch('./Symi_radar_gps_sync.csv');
         const rawCSV = await response.text();
         parsedData = await parseCSV(rawCSV);
         console.log("Parsed Data:", parsedData);
@@ -85,10 +93,12 @@ async function loadAndParseCSV() {
 }
 
 function createScene(container) {
+
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0xffffff);
 
     const gridHelper = new THREE.GridHelper(250, 50);
+    gridHelper.position.y = -9;
     scene.add(gridHelper);
 
     const planeGeo = new THREE.PlaneBufferGeometry(25000, 10000, 8, 8);
@@ -100,13 +110,14 @@ function createScene(container) {
     });
     const plane = new THREE.Mesh(planeGeo, planeMat);
     plane.rotateX(-Math.PI / 2);
+    plane.position.y = -9;
     scene.add(plane);
 
     const width = container.clientWidth;
     const height = container.clientHeight;
     const camera = new THREE.PerspectiveCamera(90, width / height, 1, 100000);
-    camera.position.set(0, 12, 0);
-    camera.rotation.set(-3.1025, 0, -3.1414);
+    camera.position.set(0, 0, 0);
+    camera.rotation.set(-3.1025, -1.17, -3.1414);
 
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(width, height);
@@ -114,10 +125,8 @@ function createScene(container) {
     container.appendChild(renderer.domElement);
 
     const controls = new THREE.OrbitControls(camera, renderer.domElement);
-    controls.target.set(0, 12, 10);
+    controls.target.set(0, 2, 30);
     controls.update();
-
-
 
 
     window.addEventListener('resize', () => {
@@ -127,7 +136,6 @@ function createScene(container) {
         camera.updateProjectionMatrix();
         renderer.setSize(newWidth, newHeight);
     });
-    camera.rotation.set(-3.1025, 0, -3.1414);
 
     return { scene, camera, renderer, controls };
 }
@@ -185,8 +193,8 @@ function plotNextBatch() {
 
     const geometry = new THREE.SphereGeometry(0.5, 32, 16);
     const material = new THREE.MeshBasicMaterial({ color: 0xf0ff00 });
-    const colorLow = new THREE.Color(0x0000ff); // Blue (low Y)
-    const colorHigh = new THREE.Color(0xff0000); // Red (high Y)
+    const colorLow = new THREE.Color(0xff0000); // Red
+    const colorHigh = new THREE.Color(0x00ff00); // Green
     const yMin = yRange.min;
     const yMax = yRange.max;
 
@@ -239,4 +247,23 @@ function plotNextBatch() {
     } else {
         console.log("Playback finished");
     }
+}
+
+function setCameraMode(mode) {
+    switch (mode) {
+        case "fpv":
+            camera.position.set(0, 9, 0);
+            camera.rotation.set(-3.1025, 0.22, -3.1414);
+            break;
+        case "side":
+            camera.position.set(50, 9, 0);
+            camera.lookAt(0, 0, 0);
+            break;
+        case "top":
+            camera.position.set(0, 70, 30);
+            camera.rotation.set(0,0,0)
+            camera.lookAt(0, 0, 0);
+            break;
+    }
+    controls.update();
 }
