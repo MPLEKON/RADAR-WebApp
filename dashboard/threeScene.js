@@ -69,14 +69,14 @@ export function renderBufferedFrames(frames) {
     // Remove existing spheres
     pointMeshes.forEach(mesh => scene.remove(mesh));
     pointMeshes = [];
-
+    const geometry = new THREE.SphereGeometry(0.1, 8, 8);
+    const material = new THREE.MeshStandardMaterial({ color: 0x33ffaa });
+    
     let totalPoints = 0;
 
     frames.forEach(frame => {
         if (Array.isArray(frame.points)) {
             frame.points.forEach(({ x, y, z }) => {
-                const geometry = new THREE.SphereGeometry(0.1, 8, 8);
-                const material = new THREE.MeshStandardMaterial({ color: 0x33ffaa });
                 const sphere = new THREE.Mesh(geometry, material);
                 sphere.position.set(z, y, x);
                 scene.add(sphere);

@@ -18,6 +18,7 @@ window.addEventListener("DOMContentLoaded", async () => {
     console.log("Loaded preloaded CSV file content:", rawCSV);
     parsedData = await parseCSV(rawCSV); 
     console.log("parsedData length:", parsedData.length);
+    
     await computeGlobalExtremes(parsedData);
     await setupCharts();
     await init3DScene();
@@ -37,6 +38,7 @@ function startRealTimeLoop() {
     const frameRate = 50; // ms per frame (20 FPS)
     const totalFrames = parsedData.length;
     const totalTime = (totalFrames * frameRate) / 1000;
+    const video = document.getElementById('videoPlayback');
 
     setInterval(() => {
         const frame = parsedData[currentFrame];
@@ -95,6 +97,7 @@ function startRealTimeLoop() {
         const progressPercent = (currentFrame / (totalFrames - 1)) * 100;
         const elapsedSec = (currentFrame * frameRate) / 1000;
 
+        video.currentTime = elapsedSec;
         document.getElementById('frameProgress').style.width = `${progressPercent}%`;
         document.getElementById('elapsedTime').textContent = formatTime(elapsedSec);
         document.getElementById('totalDuration').textContent = formatTime(totalTime);
