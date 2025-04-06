@@ -40,7 +40,8 @@ function cleanParsedData(parsedData) {
     return parsedData.map(row => {
         const frameNum = Number(row["Frame Number"]);
         const timestamp = row["POSIX Timestamp"];
-        const detectedObjectsNum = Number(row["Num Detected Objects"]);
+        const latitude = parseFloat(row["Latitude"]) / 1e6;
+        const longitude = parseFloat(row["Longitude"]) / 1e6;
         const pointsRaw = row["Detected Objects"];
 
         if (isNaN(frameNum)) {
@@ -51,11 +52,13 @@ function cleanParsedData(parsedData) {
         return {
             frameNum: frameNum - firstFrameNum,
             timestamp,
-            detectedObjectsNum,
+            latitude,
+            longitude,
             points: parseNestedArray(pointsRaw),
         };
     }).filter(entry => entry !== null);
 }
+
 
 function parseNestedArray(dataString) {
     try {
