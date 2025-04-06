@@ -1,6 +1,7 @@
 console.log("Main JS file loaded");
 
 import { parseCSV } from './csv_parser.js';
+import { runDBSCAN, getBoundingBoxes, getClusterCentroids } from './clustering.js';
 
 let scene, camera, renderer, controls;
 let parsedData = [];
@@ -9,6 +10,7 @@ let frameIndex = 0;
 let spheres = [];
 let playbackTimer = null;
 let isPaused = false;
+let boundingBoxes = [];
 
 document.addEventListener('DOMContentLoaded', async () => {
     const container = document.getElementById("canvas");
@@ -17,6 +19,22 @@ document.addEventListener('DOMContentLoaded', async () => {
     const pauseBtn = document.getElementById("pauseBtn");
 
     await loadAndParseCSV();
+    let yMin = Infinity;
+    let yMax = -Infinity;
+    
+    parsedData.forEach(frame => {
+        if (Array.isArray(frame.points)) {
+            frame.points.forEach(point => {
+                if (typeof point.y === 'number') {
+                    yMin = Math.min(yMin, point.y);
+                    yMax = Math.max(yMax, point.y);
+                }
+            });
+        }
+    });
+
+window.yRange = { min: yMin, max: yMax }; // make it globally accessible
+console.log("Y range:", yMin, yMax);
 
     ({ scene, camera, renderer, controls } = createScene(container));
     window.camera = camera; // for manual debugging
@@ -121,22 +139,33 @@ function animate() {
 }
 
 function clearSpheres() {
-    for (const s of spheres) {
-        scene.remove(s);
-    }
+    for (const s of spheres) scene.remove(s);
+    for (const b of boundingBoxes) scene.remove(b);
     spheres = [];
+    boundingBoxes = [];
 }
 
 function startStatic() {
     clearSpheres();
 
     const geometry = new THREE.SphereGeometry(0.5, 32, 16);
-    const material = new THREE.MeshBasicMaterial({ color: 0xf0ff00 });
+    const yMin = yRange.min;
+    const yMax = yRange.max;
+    const colorLow = new THREE.Color(0xff0000); // Red
+    const colorHigh = new THREE.Color(0x00ff00); // Green
 
     for (const frame of parsedData) {
         for (const point of frame.points) {
+            // Normalize the Y value
+            const normY = (point.y - yMin) / (yMax - yMin);
+            const clampedY = Math.min(Math.max(normY, 0), 1); // clamp to [0, 1]
+
+            // Create interpolated color
+            const interpolatedColor = colorLow.clone().lerp(colorHigh, clampedY);
+            const material = new THREE.MeshBasicMaterial({ color: interpolatedColor });
+
             const sphere = new THREE.Mesh(geometry, material);
-            sphere.position.set(point.z, point.x, point.y);
+            sphere.position.set(point.z, point.x, point.y); 
             scene.add(sphere);
             spheres.push(sphere);
         }
@@ -156,22 +185,57 @@ function plotNextBatch() {
 
     const geometry = new THREE.SphereGeometry(0.5, 32, 16);
     const material = new THREE.MeshBasicMaterial({ color: 0xf0ff00 });
+    const colorLow = new THREE.Color(0x0000ff); // Blue (low Y)
+    const colorHigh = new THREE.Color(0xff0000); // Red (high Y)
+    const yMin = yRange.min;
+    const yMax = yRange.max;
 
     const batch = parsedData.slice(frameIndex, frameIndex + 10);
+    const allPoints = batch.flatMap(f => f.points); //This is a step to put all points from these frames together
+    const dbscanInput = allPoints.map(p => [p.x, p.y, p.z]); //Mapping points for DBSCAN use by converting them to array
 
-    for (const frame of batch) {
-        for (const point of frame.points) {
-            const sphere = new THREE.Mesh(geometry, material);
-            sphere.position.set(point.z, point.x, point.y);
-            scene.add(sphere);
-            spheres.push(sphere);
-        }
+    const labels = runDBSCAN(dbscanInput, 2, 3); // eps = 2, minPts = 3
+
+    allPoints.forEach((point, i) => {
+        point.clusterId = labels[i];
+    });
+
+    for (const point of allPoints) {
+        const normY = (point.y - yMin) / (yMax - yMin);
+        const clampedY = Math.min(Math.max(normY, 0), 1);
+        const color = colorLow.clone().lerp(colorHigh, clampedY);
+
+        const material = new THREE.MeshBasicMaterial({ color });
+        const sphere = new THREE.Mesh(geometry, material);
+        sphere.position.set(point.z, point.x, point.y); // (z, x, y) as per your convention
+        scene.add(sphere);
+        spheres.push(sphere);
+    }
+    const boxes = getBoundingBoxes(allPoints);
+
+    for (const box of boxes) {
+        const sizeX = box.xMax - box.xMin;
+        const sizeY = box.yMax - box.yMin;
+        const sizeZ = box.zMax - box.zMin;
+
+        const centerX = (box.xMin + box.xMax) / 2;
+        const centerY = (box.yMin + box.yMax) / 2;
+        const centerZ = (box.zMin + box.zMax) / 2;
+
+        const boxGeometry = new THREE.BoxGeometry(sizeZ,sizeX ,sizeY );
+        const edges = new THREE.EdgesGeometry(boxGeometry);
+        const lineMaterial = new THREE.LineBasicMaterial({ color: 0x000000 });
+        const wireframe = new THREE.LineSegments(edges, lineMaterial);
+        wireframe.position.set(centerZ,centerX ,centerY );
+
+        scene.add(wireframe);
+        boundingBoxes.push(wireframe);
     }
 
     frameIndex += 1;
 
     if (frameIndex < parsedData.length) {
-        setTimeout(plotNextBatch, 50); // 10 FPS
+        setTimeout(plotNextBatch, 50); 
     } else {
         console.log("Playback finished");
     }
