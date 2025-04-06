@@ -37,7 +37,7 @@ export function init3DScene() {
 }
 
 export function renderAllPoints(parsedData) {
-    console.log('Rendering all points from first 10 frames...');
+    //console.log('Rendering all points from first 10 frames...');
 
     // Remove existing spheres
     pointMeshes.forEach(mesh => scene.remove(mesh));
@@ -60,11 +60,11 @@ export function renderAllPoints(parsedData) {
         }
     });
 
-    console.log(`Rendered ${totalPoints} points from 10 frames.`);
+    //console.log(`Rendered ${totalPoints} points from 10 frames.`);
 }
 
 export function renderBufferedFrames(frames) {
-    console.log(`Rendering buffer of ${frames.length} frames`);
+    //console.log(`Rendering buffer of ${frames.length} frames`);
 
     // Remove existing spheres
     pointMeshes.forEach(mesh => scene.remove(mesh));
@@ -86,5 +86,5 @@ export function renderBufferedFrames(frames) {
         }
     });
 
-    console.log(`Total points rendered: ${totalPoints}`);
+    //console.log(`Total points rendered: ${totalPoints}`);
 }
