@@ -6,7 +6,7 @@ let parsedData = [];
 let isPaused = false;
 let mode = "realtime";
 let yRange = { min: -10, max: 10 }; // Set appropriately before playback
-import { getBoundingBoxes } from './clustering.js';
+import { getBoundingBoxes,getClusterCentroids } from './clustering.js';
 
 
 export function createScene(container) {
@@ -14,7 +14,7 @@ export function createScene(container) {
     scene = new THREE.Scene();
     scene.background = new THREE.Color(0xffffff);
 
-    const gridHelper = new THREE.GridHelper(250, 50);
+    const gridHelper = new THREE.GridHelper(260, 26);
     gridHelper.position.y = -9;
     scene.add(gridHelper);
 
@@ -30,6 +30,19 @@ export function createScene(container) {
     plane.position.y = -9;
     scene.add(plane);
 
+    const pyramidGeometry = new THREE.ConeGeometry(2, 7, 4); 
+    const pyramidMaterial = new THREE.MeshStandardMaterial({
+        color: 0xffaa00,
+        transparent: false,
+        opacity: 0.8
+    });
+    const pyramid = new THREE.Mesh(pyramidGeometry, pyramidMaterial);
+
+    
+    pyramid.position.set(0, 0, -3.5); 
+    pyramid.rotation.y = Math.PI/4;
+    pyramid.rotation.x = -Math.PI/2; 
+    scene.add(pyramid);
     const width = container.clientWidth;
     const height = container.clientHeight;
     camera = new THREE.PerspectiveCamera(90, width / height, 1, 100000);
@@ -104,6 +117,33 @@ export function renderBufferedFrames(frames,yMin,yMax) {
         boundingBoxes.push(wireframe);
     }
 
+    // ⛴️ Create a rectangle (dock) at each centroid
+const centroids = getClusterCentroids(allPoints);
+
+for (const c of centroids) {
+    if (c.y <= 12) continue; // only show dock if centroid is far enough
+
+    const dockGeometry = new THREE.BoxGeometry(10, 2, 2); // Depth (Z), Width (X), Height (Y)
+    const dockMaterial = new THREE.MeshStandardMaterial({
+        color: 0x888888,
+        transparent: true,
+        opacity: 0.6
+    });
+
+    const dock = new THREE.Mesh(dockGeometry, dockMaterial);
+
+    // Place the dock so its upper-left-front corner is on the centroid
+    // Remember: THREE.BoxGeometry is centered by default
+    dock.position.set(
+        c.z ,   // shift in z (depth) to match front face
+        c.x ,   // shift in x (width) to match left edge
+        c.y     // shift in y (height) to match top
+    );
+
+    scene.add(dock);
+    boundingBoxes.push(dock); // so we can remove it on next render
+}
+
     renderer.render(scene, camera);
 }
 
@@ -116,14 +156,14 @@ export function setCameraMode(mode) {
             break;
 
         case "side":
-            camera.position.set(50, 9, 0);
+            camera.position.set(40, 9, 0);
             controls.target.set(0, 9, 0);
             break;
 
         case "top":
-            camera.position.set(0, 70, 30);
+            camera.position.set(0, 40,0);
             camera.rotation.set(0, 0, 0);
-            controls.target.set(0, 0, 30);
+            controls.target.set(0, 0, 0);
             break;
 
         default:
