@@ -1,12 +1,15 @@
-// threeScene.js
-//import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.1/build/three.module.js';
+let scene, camera, renderer, controls;
+let spheres = [];
+let boundingBoxes = [];
+let frameIndex = 0;
+let parsedData = [];
+let isPaused = false;
+let mode = "realtime";
+let yRange = { min: -10, max: 10 }; // Set appropriately before playback
+import { getBoundingBoxes } from './clustering.js';
 
-let scene; 
-let pointMeshes = [];
 
-export function init3DScene() {
-    const container = document.getElementById('three-container');
-    if (!container) return;
+export function createScene(container) {
 
     scene = new THREE.Scene();
     scene.background = new THREE.Color(0xffffff);
@@ -22,7 +25,6 @@ export function init3DScene() {
         transparent: true,
         opacity: 0.8
     });
-
     const plane = new THREE.Mesh(planeGeo, planeMat);
     plane.rotateX(-Math.PI / 2);
     plane.position.y = -9;
@@ -30,84 +32,90 @@ export function init3DScene() {
 
     const width = container.clientWidth;
     const height = container.clientHeight;
-
-    const camera = new THREE.PerspectiveCamera(90, width / height, 1, 100000);
+    camera = new THREE.PerspectiveCamera(90, width / height, 1, 100000);
     camera.position.set(0, 0, 0);
     camera.rotation.set(-3.1025, -1.17, -3.1414);
 
-    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(width, height);
     container.innerHTML = '';
     container.appendChild(renderer.domElement);
 
-    const controls = new THREE.OrbitControls(camera, renderer.domElement);
+    controls = new THREE.OrbitControls(camera, renderer.domElement);
     controls.target.set(0, 2, 30);
     controls.update();
 
 
     window.addEventListener('resize', () => {
-        camera.aspect = container.clientWidth / container.clientHeight;
+        const newWidth = container.clientWidth;
+        const newHeight = container.clientHeight;
+        camera.aspect = newWidth / newHeight;
         camera.updateProjectionMatrix();
-        renderer.setSize(container.clientWidth, container.clientHeight);
+        renderer.setSize(newWidth, newHeight);
     });
 
-    function animate() {
-        requestAnimationFrame(animate);
-        renderer.render(scene, camera);
+    return { scene, camera, renderer, controls };
+    
+}
+
+export function renderBufferedFrames(frames,yMin,yMax) {
+    if (!scene) return;
+
+    // ✅ Clear only spheres and bounding boxes
+    spheres.forEach(s => scene.remove(s));
+    boundingBoxes.forEach(b => scene.remove(b));
+    spheres = [];
+    boundingBoxes = [];
+
+    const geometry = new THREE.SphereGeometry(0.5, 8, 8);
+    const allPoints = frames.flatMap(f => f.points);
+
+    // Compute Y range for color interpolation
+    const colorNear = new THREE.Color(0xff0000); // Red = close
+    const colorFar = new THREE.Color(0x00ff00);  // Green = far
+
+    for (const point of allPoints) {
+        // Normalize Y to [0, 1] range
+        const normY = (point.y - yMin) / (yMax - yMin || 1); // avoid /0
+        const color = colorNear.clone().lerp(colorFar, normY);
+
+        const material = new THREE.MeshBasicMaterial({ color });
+        const sphere = new THREE.Mesh(geometry, material);
+        sphere.position.set(point.z, point.x, point.y); // (z, x, y)
+        scene.add(sphere);
+        spheres.push(sphere);
     }
 
-    animate();
+    const boxes = getBoundingBoxes(allPoints);
+    for (const box of boxes) {
+        const sizeX = box.xMax - box.xMin;
+        const sizeY = box.yMax - box.yMin;
+        const sizeZ = box.zMax - box.zMin;
+        const centerX = (box.xMin + box.xMax) / 2;
+        const centerY = (box.yMin + box.yMax) / 2;
+        const centerZ = (box.zMin + box.zMax) / 2;
+
+        const boxGeometry = new THREE.BoxGeometry(sizeZ, sizeX, sizeY);
+        const edges = new THREE.EdgesGeometry(boxGeometry);
+        const lineMaterial = new THREE.LineBasicMaterial({ color: 0x000000 });
+        const wireframe = new THREE.LineSegments(edges, lineMaterial);
+        wireframe.position.set(centerZ, centerX, centerY);
+        scene.add(wireframe);
+        boundingBoxes.push(wireframe);
+    }
+
+    renderer.render(scene, camera);
 }
 
-export function renderAllPoints(parsedData) {
-    //console.log('Rendering all points from first 10 frames...');
-
-    // Remove existing spheres
-    pointMeshes.forEach(mesh => scene.remove(mesh));
-    pointMeshes = [];
-
-    let totalPoints = 0;
-
-    parsedData.forEach((frame, index) => {
-        if (index >= 10) return; // Only first 10 frames
-        if (Array.isArray(frame.points)) {
-            frame.points.forEach(({ x, y, z }) => {
-                const geometry = new THREE.SphereGeometry(0.1, 8, 8);
-                const material = new THREE.MeshStandardMaterial({ color: 0x3399ff });
-                const sphere = new THREE.Mesh(geometry, material);
-                sphere.position.set(x, y, z);
-                scene.add(sphere);
-                pointMeshes.push(sphere);
-                totalPoints++;
-            });
-        }
-    });
-
-    //console.log(`Rendered ${totalPoints} points from 10 frames.`);
+function clearSpheres() {
+    for (const s of spheres) scene.remove(s);
+    for (const b of boundingBoxes) scene.remove(b);
+    spheres = [];
+    boundingBoxes = [];
 }
 
-export function renderBufferedFrames(frames) {
-    //console.log(`Rendering buffer of ${frames.length} frames`);
-
-    // Remove existing spheres
-    pointMeshes.forEach(mesh => scene.remove(mesh));
-    pointMeshes = [];
-    const geometry = new THREE.SphereGeometry(0.5, 32, 16);
-    const material = new THREE.MeshStandardMaterial({ color: 0x33ffaa });
-    
-    let totalPoints = 0;
-
-    frames.forEach(frame => {
-        if (Array.isArray(frame.points)) {
-            frame.points.forEach(({ x, y, z }) => {
-                const sphere = new THREE.Mesh(geometry, material);
-                sphere.position.set(z, x, y);
-                scene.add(sphere);
-                pointMeshes.push(sphere);
-                totalPoints++;
-            });
-        }
-    });
-
-    //console.log(`Total points rendered: ${totalPoints}`);
+export function animate() {
+    requestAnimationFrame(animate);
+    controls.update();
+    renderer.render(scene, camera);
 }
