@@ -2,6 +2,7 @@ import { parseCSV } from './csv_parser.js';
 import { setupCharts, updateCharts, computeGlobalExtremes, setBoundingBoxes } from './chartManager.js';
 import { runDBSCAN, getBoundingBoxes, getClusterCentroids } from './clustering.js';
 import { init3DScene, renderBufferedFrames } from './threeScene.js';
+import { initMap, updateMap } from './map_plotter.js';
 
 let parsedData =[];
 let currentFrame = 0;
@@ -16,9 +17,11 @@ window.addEventListener("DOMContentLoaded", async () => {
     const rawCSV = await response.text();
     //console.log(rawCSV);
     console.log("Loaded preloaded CSV file content:", rawCSV);
+
+    initMap();
     parsedData = await parseCSV(rawCSV); 
     console.log("parsedData length:", parsedData.length);
-    
+
     await computeGlobalExtremes(parsedData);
     await setupCharts();
     await init3DScene();
@@ -45,11 +48,11 @@ function startRealTimeLoop() {
         //console.log(frame)
         //if (!frame || !frame.points) return;
 
-
+        
         frameBuffer.push(frame.points);
         //console.log("frameBuffer",frameBuffer)
         if (frameBuffer.length > BUFFER_SIZE) frameBuffer.shift();
-
+        updateMap(frame);
 
         const bufferedPoints = frameBuffer.flat();
         //console.log("bufferdPoints",bufferedPoints)
