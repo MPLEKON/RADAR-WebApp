@@ -1,31 +1,39 @@
-// map_plotter.js
 console.log("✅ map_plotter.js loaded!");
 
+let map = null;
+let marker = null;
 let lastCoords = null;
-let mapIframe = null;
+
+export function initMap() {
+    // Create map centered at (0,0) - will update when first data arrives
+    map = L.map('map-container').setView([0, 0], 18);
+    
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(map);
+}
 
 export function updateMap(frame) {
     if (!frame || !frame.latitude || !frame.longitude) return;
     
-    // Check if coordinates actually changed
+    // Check if coordinates changed (6 decimal places ≈ 10cm precision)
     const currentCoords = `${frame.latitude.toFixed(6)},${frame.longitude.toFixed(6)}`;
     if (lastCoords === currentCoords) return;
     lastCoords = currentCoords;
 
-    const mapContainer = document.getElementById('map-container');
+    const newPos = [frame.latitude, frame.longitude];
     
-    // Create iframe if it doesn't exist
-    if (!mapIframe) {
-        mapIframe = document.createElement('iframe');
-        mapIframe.width = "100%";
-        mapIframe.height = "100%";
-        mapIframe.frameBorder = "0";
-        mapContainer.appendChild(mapIframe);
+    if (!marker) {
+        // Create marker and center map
+        marker = L.marker(newPos).addTo(map);
+        map.setView(newPos, 18); // Centers the map on the marker
+    } else {
+        // Move marker and keep it centered
+        marker.setLatLng(newPos);
+        map.panTo(newPos, {
+            animate: true,
+            duration: 1, 
+            easeLinearity: 0.25
+        });
     }
-    
-    // Update the map
-    mapIframe.src = `https://www.openstreetmap.org/export/embed.html?bbox=${
-        frame.longitude-0.002},${frame.latitude-0.002},${
-        frame.longitude+0.002},${frame.latitude+0.002
-    }&layer=mapnik&marker=${frame.latitude},${frame.longitude}`;
 }
