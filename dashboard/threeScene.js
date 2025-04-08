@@ -1,7 +1,7 @@
 // threeScene.js
-import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.1/build/three.module.js';
+//import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.1/build/three.module.js';
 
-let scene; // Declare at module scope
+let scene; 
 let pointMeshes = [];
 
 export function init3DScene() {
@@ -9,18 +9,41 @@ export function init3DScene() {
     if (!container) return;
 
     scene = new THREE.Scene();
-    scene.background = new THREE.Color(0xf0f0f0);
+    scene.background = new THREE.Color(0xffffff);
 
-    const camera = new THREE.PerspectiveCamera(90, container.clientWidth / container.clientHeight, 0.1, 1000);
-    camera.position.set(0, 12, 30);
+    const gridHelper = new THREE.GridHelper(250, 50);
+    gridHelper.position.y = -9;
+    scene.add(gridHelper);
+
+    const planeGeo = new THREE.PlaneBufferGeometry(25000, 10000, 8, 8);
+    const planeMat = new THREE.MeshBasicMaterial({
+        color: 0x99ccff,
+        side: THREE.DoubleSide,
+        transparent: true,
+        opacity: 0.8
+    });
+
+    const plane = new THREE.Mesh(planeGeo, planeMat);
+    plane.rotateX(-Math.PI / 2);
+    plane.position.y = -9;
+    scene.add(plane);
+
+    const width = container.clientWidth;
+    const height = container.clientHeight;
+
+    const camera = new THREE.PerspectiveCamera(90, width / height, 1, 100000);
+    camera.position.set(0, 0, 0);
+    camera.rotation.set(-3.1025, -1.17, -3.1414);
 
     const renderer = new THREE.WebGLRenderer({ antialias: true });
-    renderer.setSize(container.clientWidth, container.clientHeight);
+    renderer.setSize(width, height);
+    container.innerHTML = '';
     container.appendChild(renderer.domElement);
 
-    const light = new THREE.DirectionalLight(0xffffff, 1);
-    light.position.set(5, 10, 7.5);
-    scene.add(light);
+    const controls = new THREE.OrbitControls(camera, renderer.domElement);
+    controls.target.set(0, 2, 30);
+    controls.update();
+
 
     window.addEventListener('resize', () => {
         camera.aspect = container.clientWidth / container.clientHeight;
@@ -69,7 +92,7 @@ export function renderBufferedFrames(frames) {
     // Remove existing spheres
     pointMeshes.forEach(mesh => scene.remove(mesh));
     pointMeshes = [];
-    const geometry = new THREE.SphereGeometry(0.1, 8, 8);
+    const geometry = new THREE.SphereGeometry(0.5, 32, 16);
     const material = new THREE.MeshStandardMaterial({ color: 0x33ffaa });
     
     let totalPoints = 0;
@@ -78,7 +101,7 @@ export function renderBufferedFrames(frames) {
         if (Array.isArray(frame.points)) {
             frame.points.forEach(({ x, y, z }) => {
                 const sphere = new THREE.Mesh(geometry, material);
-                sphere.position.set(z, y, x);
+                sphere.position.set(z, x, y);
                 scene.add(sphere);
                 pointMeshes.push(sphere);
                 totalPoints++;

@@ -6,7 +6,8 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.160.1/build/three.min.js"></script>
+    <script src="three.min.js"></script>
+    <script src="OrbitControls.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <link rel="stylesheet" href="styles.css">
 </head>
@@ -56,12 +57,23 @@
             <div class="row flex-grow-1">
                 <div class="col">
                     <div class="section h-100 p-2 d-flex flex-column bg-white rounded">
-                        <h5 class="text-center mb-2">3D View</h5>
+                        <h5 class="text-center mb-2">3D View and Camera</h5>
                         <div class="flex-grow-1 d-flex">
-                            <div id="three-container" class="w-100 h-100"></div>
+                            <!-- 3D Canvas (left) -->
+                            <div id="three-container" class="w-50 h-100 me-2" style="border: 1px solid #ccc; border-radius: 6px;"></div>
+                            
+                            <!-- Video Element (right) -->
+                            <div class="w-50 h-100 d-flex align-items-center justify-content-center">
+                                <video id="videoPlayback" 
+                                       src="Symi_trimmed.mp4" 
+                                       muted 
+                                       autoplay 
+                                       loop
+                                       style="width: 100%; height: auto; object-fit: contain; border-radius: 6px;">
+                                </video>
+                            </div>
                         </div>
                     </div>
-
                 </div>
             </div>
         </div>
@@ -97,31 +109,31 @@
                                 <div class="progress-bar bg-success" id="frameProgress" role="progressbar" style="width: 0%;"></div>
                             </div>
                         </li>
-            </ul>
+                    </ul>
             <hr class="bg-light">
             <h6>About:</h6>
             <div class="bg-dark text-light p-2 rounded small mb-2">
                 <div class="row">
-                  <!-- Contributors (left) -->
-                  <div class="col-6">
+                <!-- Contributors (left) -->
+                <div class="col-6">
                     <strong>Contributors:</strong><br>
                     <a href="https://www.linkedin.com/in/fotios-papadopoulos-22722b299/" 
-                       target="_blank" class="link-light text-decoration-underline">Fotios Papadopoulos</a><br>
+                    target="_blank" class="link-light text-decoration-underline">Fotios Papadopoulos</a><br>
                     <a href="https://www.linkedin.com/in/ioannis-christopoulos-3abab6227/" 
-                       target="_blank" class="link-light text-decoration-underline">Ioannis Christopoulos</a>
-                  </div>
-              
-                  <!-- Supervisors (right) -->
-                  <div class="col-6">
+                    target="_blank" class="link-light text-decoration-underline">Ioannis Christopoulos</a>
+                </div>
+            
+                <!-- Supervisors (right) -->
+                <div class="col-6">
                     <strong>Supervisors:</strong><br>
                     <a href="https://www.ntnu.edu/employees/henrique.gaspar" 
-                       target="_blank" class="link-light text-decoration-underline">Henrique M. Gaspar</a><br>
+                    target="_blank" class="link-light text-decoration-underline">Henrique M. Gaspar</a><br>
                     <a href="https://eee.uniwa.gr/en/39-bio/809-mitilineos-bio-en" 
-                       target="_blank" class="link-light text-decoration-underline">Stylianos A. Mytilinaios</a>
-                  </div>
+                    target="_blank" class="link-light text-decoration-underline">Stylianos A. Mytilinaios</a>
                 </div>
-              </div>
-              
+                </div>
+            </div>
+            
             <a href="https://github.com/MPLEKON/RADAR-WebApp/blob/main/readme.md"
                 target="_blank"
                 rel="noopener noreferrer"
@@ -132,22 +144,12 @@
             class="btn btn-sm btn-outline-light w-100 mb-2" 
             data-bs-toggle="modal" 
             data-bs-target="#projectDescriptionModal">
-      Project Description
-    </button>
+                Project Description
+            </button>
             <hr class="bg-light">
             <div class="text-warning text-center small mt-2">
             CPA ➝ <strong id="cluster-distance">12.7m</strong>
             </div>
-            <div style="width: 100%;  overflow: hidden;">
-                <video id="videoPlayback" 
-                       src="Symi_trimmed.mp4" 
-                        
-                       muted 
-                       style="width: 50%; height: auto; object-fit: contain; border-radius: 6px; display: block; margin: 0 auto;">
-                </video>
-              </div>
-
-        </div>
         </div>
     </div>
     </div>
@@ -155,21 +157,21 @@
     <script type="module" src="main.js"></script>
     <div class="modal fade" id="projectDescriptionModal" tabindex="-1" aria-labelledby="projectDescriptionModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-scrollable">
-          <div class="modal-content bg-dark text-white">
+        <div class="modal-content bg-dark text-white">
             <div class="modal-header">
-              <h5 class="modal-title" id="projectDescriptionModalLabel">Project Description</h5>
-              <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            <h5 class="modal-title" id="projectDescriptionModalLabel">Project Description</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body small">
-              This project, a collaboration between UniWA and NTNU, visualizes real radar data from FMCW sensors mounted on a Ro-Ro passenger ship.<br><br>
-              The goal is to enhance docking precision by tracking backscattered signals during berthing.<br><br>
-              Radar operates at 20 FPS within a 50m range, detecting objects with 3D position, radial velocity (m/s), and SNR (dB).
+            This project, a collaboration between UniWA and NTNU, visualizes real radar data from FMCW sensors mounted on a Ro-Ro passenger ship.<br><br>
+            The goal is to enhance docking precision by tracking backscattered signals during berthing.<br><br>
+            Radar operates at 20 FPS within a 50m range, detecting objects with 3D position, radial velocity (m/s), and SNR (dB).
             </div>
             <div class="modal-footer">
-              <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Close</button>
+            <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Close</button>
             </div>
-          </div>
         </div>
-      </div>
+        </div>
+    </div>
 </body>
 </html>
