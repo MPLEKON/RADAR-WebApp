@@ -62,9 +62,9 @@
                     <div class="section h-100 p-2 d-flex flex-column bg-white rounded">
                         <h5 class="text-center mb-2">3D View and Camera</h5>
                         <div class="d-flex justify-content-center gap-2 mb-2">
-                            <button id="btnTopView" class="btn btn-sm btn-outline-primary" data-mode="fpv">Radar FPV</button>
-                            <button id="btnSideView" class="btn btn-sm btn-outline-primary"data-mode="side">Side View</button>
-                            <button id="btnRadarFPV" class="btn btn-sm btn-outline-primary"data-mode="top">Top View</button>
+                            <button class="btn btn-sm btn-outline-primary" onclick="setCameraMode('fpv')">Radar FPV</button>
+                            <button class="btn btn-sm btn-outline-primary" onclick="setCameraMode('top')">Top View</button>
+                            <button class="btn btn-sm btn-outline-primary" onclick="setCameraMode('side')">Side View</button>
                         </div>
                         <div class="flex-grow-1 d-flex">
                             <!-- 3D Canvas (left) -->

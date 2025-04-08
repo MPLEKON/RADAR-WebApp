@@ -1,7 +1,7 @@
 import { parseCSV } from './csv_parser.js';
 import { setupCharts, updateCharts, computeGlobalExtremes, setBoundingBoxes } from './chartManager.js';
 import { runDBSCAN, getBoundingBoxes, getClusterCentroids } from './clustering.js';
-import { createScene, animate, renderBufferedFrames } from './threeScene.js';
+import { createScene, animate, renderBufferedFrames, setCameraMode } from './threeScene.js';
 import { initMap, updateMap } from './map_plotter.js';
 
 let scene, camera, renderer, controls;
@@ -42,6 +42,7 @@ window.addEventListener("DOMContentLoaded", async () => {
     await ({ scene, camera, renderer, controls } = createScene(container));
     animate();
     //renderAllPoints(parsedData);
+    window.setCameraMode = setCameraMode;
     startRealTimeLoop()
 });
 

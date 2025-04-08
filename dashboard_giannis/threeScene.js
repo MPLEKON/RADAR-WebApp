@@ -107,13 +107,31 @@ export function renderBufferedFrames(frames,yMin,yMax) {
     renderer.render(scene, camera);
 }
 
-function clearSpheres() {
-    for (const s of spheres) scene.remove(s);
-    for (const b of boundingBoxes) scene.remove(b);
-    spheres = [];
-    boundingBoxes = [];
-}
+export function setCameraMode(mode) {
+    switch (mode) {
+        case "fpv":
+            camera.position.set(0, 9, 0);
+            camera.rotation.set(-3.1025, 0, -3.1414);
+            controls.target.set(0, 9, 30);
+            break;
 
+        case "side":
+            camera.position.set(50, 9, 0);
+            controls.target.set(0, 9, 0);
+            break;
+
+        case "top":
+            camera.position.set(0, 70, 30);
+            camera.rotation.set(0, 0, 0);
+            controls.target.set(0, 0, 30);
+            break;
+
+        default:
+            console.warn(`Unknown camera mode: ${mode}`);
+    }
+
+    controls.update();
+}
 export function animate() {
     requestAnimationFrame(animate);
     controls.update();
