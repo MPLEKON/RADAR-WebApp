@@ -66,12 +66,14 @@ function getColor(clusterId) {
 
 function startRealTimeLoop() {
     const frameRate = 50;
-    const totalFrames = parsedData.length;
-    const totalTime = (totalFrames * frameRate) / 1000;
+
     const video = document.getElementById('videoPlayback');
 
     setInterval(() => {
         if (isPaused) return;
+
+        const totalFrames = parsedData.length;
+        const totalTime = (totalFrames * frameRate) / 1000;
 
         const frame = parsedData[currentFrame];
         if (!frame || !Array.isArray(frame.points)) return;

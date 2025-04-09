@@ -45,6 +45,15 @@ function getColor(clusterId) {
 
 
 export function setupCharts() {
+    if (chart1) {
+        chart1.destroy();
+        chart1 = null;
+    }
+    if (chart2) {
+        chart2.destroy();
+        chart2 = null;
+    }
+
     const ctx1 = document.getElementById('plot1')?.getContext('2d');
     if (ctx1) {
         chart1 = new Chart(ctx1, {
