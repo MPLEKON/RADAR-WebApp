@@ -106,7 +106,6 @@
                             </div>
                         </li>
                         <li><strong>Port:</strong> <a id="portLink" href="#" target="_blank"><span id="portName">—</span></a></li>
-                        <li><strong>Coordinates:</strong><br>36°53'50"N<br>27°17'28"E</li>
                         <li><strong>Arrival:</strong> <span id="arrivalTime">—</span></li>
                         <li class="mb-3">
                             <strong>Progress:</strong>
@@ -176,9 +175,19 @@
             <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body small">
-            This project, a collaboration between UniWA and NTNU, visualizes real radar data from FMCW sensors mounted on a Ro-Ro passenger ship.<br><br>
-            The goal is to enhance docking precision by tracking backscattered signals during berthing.<br><br>
-            Radar operates at 20 FPS within a 50m range, detecting objects with 3D position, radial velocity (m/s), and SNR (dB).
+                This project, a collaboration between UniWA and NTNU, visualizes real radar data from FMCW sensors 
+                mounted at the stern of a Ro-Ro passenger ship to improve docking precision. <br></br> 
+                The radar operates at 20 FPS within a 50m range, detecting objects in 3D while providing radial 
+                velocity (m/s) and SNR (dB).<br></br> 
+                The processed data, using clustering techniques like DBSCAN to form clear 
+                shapes, helps the captain monitor the situation and track the dock.<br></br>  
+                The web-based dashboard demo features a video with a similar perspective to the radar, a live map
+                of the ship's position, a progress bar for the demo, two 2D charts (top and side views) of the radar 
+                data, and a 3D plot with preset buttons and free mouse-controlled navigation. In the 3D plot, 
+                points change color based on their distance from the ship—green indicates safe distance, while red
+                signals danger when very close.<br></br> 
+                This very short demo highlights the essential capabilities of the 
+                system, which can be tailored to meet each vessel’s and crew’s unique demands
             </div>
             <div class="modal-footer">
             <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Close</button>
