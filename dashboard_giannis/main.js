@@ -20,44 +20,41 @@ let intervalId = null;
 
 
 window.addEventListener("DOMContentLoaded", async () => {
-    const response = await fetch('./Symi_radar_gps_sync_filtered.csv');
-    const rawCSV = await response.text();
-    //console.log(rawCSV);
-    console.log("Loaded preloaded CSV file content:", rawCSV);
     initMap();
-    parsedData = await parseCSV(rawCSV); 
-    console.log("parsedData length:", parsedData.length);
-
-    
-    parsedData.forEach(frame => {
-        if (Array.isArray(frame.points)) {
-            frame.points.forEach(point => {
-                if (typeof point.y === 'number') {
-                    yMin = Math.min(yMin, point.y);
-                    yMax = Math.max(yMax, point.y);
-                }
-            });
-        }
-    });
-    
-    await computeGlobalExtremes(parsedData);
-    await setupCharts();
-    const container = document.getElementById("three-container");
-    await ({ scene, camera, renderer, controls } = createScene(container));
-    animate();
-    //renderAllPoints(parsedData);
     window.setCameraMode = setCameraMode;
+
+    const radioButtons = document.querySelectorAll('input[name="fileOption"]');
     
+    // Set up listeners for radio buttons (Kos, Rhodes, Symi)
+    radioButtons.forEach(radio => {
+        radio.addEventListener('change', async () => {
+            if (radio.checked) {
+                const { csv, video } = getFilesForPort(radio.value);
+                await initializeFromCSV(csv, video);
+            }
+        });
+    });
+
+    // Preload Symi as default (or set another if preferred)
+    const defaultPort = 'symi';
+    document.getElementById('radioSymi').checked = true;
+    const { csv, video } = getFilesForPort(defaultPort);
+    await initializeFromCSV(csv, video);
+
+    // Start/pause button handlers
     document.getElementById("btnStart").addEventListener("click", () => {
         isStarted = true;
         isPaused = false;
     });
-    
+
     document.getElementById("btnPause").addEventListener("click", () => {
         isPaused = true;
     });
-    startRealTimeLoop()
+
+    // Start animation loop
+    startRealTimeLoop();
 });
+
 
 function getColor(clusterId) {
     if (clusterId === -1) return 'gray'; // noise
@@ -138,3 +135,69 @@ function formatTime(seconds) {
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
 }
 
+function getFilesForPort(value) {
+    switch (value) {
+        case 'kos':
+            document.getElementById("portName").textContent = "Kos";
+            document.getElementById("portLink").href = "https://www.openstreetmap.org/?mlat=36.8972&mlon=27.2911&zoom=15";
+            document.getElementById("arrivalTime").textContent = "05:40:10";
+            return {
+                csv: './Kos_radar_gps_sync_filtered.csv',
+                video: './Kos_trimmed.mp4'
+            };
+        case 'symi':
+            document.getElementById("portName").textContent = "Symi";
+            document.getElementById("portLink").href = "https://www.openstreetmap.org/?mlat=36.620905&mlon=27.846576&zoom=19&marker=36.620905,27.846576#map=19/36.620905/27.846576&layers=H";
+            document.getElementById("arrivalTime").textContent = "06:45:50";
+            return {
+                csv: './Symi_radar_gps_sync_filtered.csv',
+                video: './Symi_trimmed.mp4'
+            };
+        default:
+            document.getElementById("portName").textContent = "Symi";
+            document.getElementById("portLink").href = "https://www.openstreetmap.org/?mlat=36.6152&mlon=27.8376&zoom=15";
+            document.getElementById("arrivalTime").textContent = "06:45:50";
+            return {
+                csv: './Symi_radar_gps_sync_filtered.csv',
+                video: './Symi_trimmed.mp4'
+            };
+    }
+}
+
+async function initializeFromCSV(csvPath, videoPath) {
+    // Load and parse CSV
+    const response = await fetch(csvPath);
+    const rawCSV = await response.text();
+    console.log("Loaded file:", csvPath);
+    parsedData = await parseCSV(rawCSV);
+
+    // Recalculate global Y-min and Y-max
+    yMin = Infinity;
+    yMax = -Infinity;
+    parsedData.forEach(frame => {
+        if (Array.isArray(frame.points)) {
+            frame.points.forEach(point => {
+                if (typeof point.y === 'number') {
+                    yMin = Math.min(yMin, point.y);
+                    yMax = Math.max(yMax, point.y);
+                }
+            });
+        }
+    });
+
+    // Chart setup
+    await computeGlobalExtremes(parsedData);
+    await setupCharts();
+
+    // 3D setup
+    const container = document.getElementById("three-container");
+    ({ scene, camera, renderer, controls } = createScene(container));
+    animate();
+
+    // Set and reset video
+    const video = document.getElementById('videoPlayback');
+    video.pause();
+    video.src = videoPath;
+    video.load(); // force reload of new source
+    video.currentTime = 0;
+}
