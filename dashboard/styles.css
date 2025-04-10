@@ -1,7 +1,6 @@
 html, body {
   height: 100%;
   margin: 0;
-  /*overflow: hidden; /* prevent scrollbars */
 }
 
 .full-height {
@@ -46,13 +45,13 @@ html, body {
   font-weight: bold;
 }
 
-iframe,
+
 canvas {
   width: 100%;
   height: 100%;
   border-radius: 6px;
 }
-#three-container {
-  height: 100%;
-  max-height: calc(100vh - 200px); /* subtract top elements */
+#three-container, #videoPlayback {
+  height: 100% !important;
+  max-height: 95%;
 }
